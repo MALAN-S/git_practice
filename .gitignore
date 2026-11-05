@@ -1,0 +1,19 @@
+# Maven
+backend/target/
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+backend/release.properties
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+# IDE & OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+*.log
