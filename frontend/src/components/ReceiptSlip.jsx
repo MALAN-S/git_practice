@@ -113,3 +113,4 @@ export default function ReceiptSlip({ bill }) {
     </div>
   );
 }
+
