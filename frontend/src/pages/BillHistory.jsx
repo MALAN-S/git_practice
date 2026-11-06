@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import ReceiptSlip from '../components/ReceiptSlip';
 import { History, Search, Printer, Ban, Receipt, CheckCircle, Clock } from 'lucide-react';
 
 export default function BillHistory() {
@@ -32,9 +33,9 @@ export default function BillHistory() {
     : bills;
 
   return (
-    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 min-h-full space-y-6">
+    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 min-h-full space-y-6 print:border-none print:shadow-none print:p-0 print:m-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden no-print">
         <div>
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Bill History</h1>
           <p className="text-xs text-slate-400 font-medium mt-1">Search past transactions, reprint customer receipts, or cancel bills</p>
@@ -54,7 +55,7 @@ export default function BillHistory() {
       {/* Main Grid: Bill Table + Interactive Receipt Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Bills Table */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+        <div className="lg:col-span-2 rounded-2xl border border-slate-100 overflow-hidden shadow-sm print:hidden no-print">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
@@ -114,8 +115,8 @@ export default function BillHistory() {
         </div>
 
         {/* Right: Printable Customer Receipt Card */}
-        <div className="rounded-2xl bg-slate-50/70 border border-slate-100 p-5 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div className="rounded-2xl bg-slate-50/70 border border-slate-100 p-5 space-y-4 print:w-full print:p-0 print:border-none print:bg-white print:m-0">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 print:hidden no-print">
             <div className="flex items-center gap-2">
               <Receipt className="w-4 h-4 text-indigo-600" />
               <h3 className="text-sm font-black text-slate-800">Customer Receipt</h3>
@@ -132,47 +133,7 @@ export default function BillHistory() {
           </div>
 
           {selectedBill ? (
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4 text-xs">
-              <div className="text-center pb-3 border-b border-dashed border-slate-200">
-                <div className="font-black text-base text-slate-800">SHOP</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Xerox, Print & Stationery Store</div>
-                <div className="text-[11px] font-bold text-indigo-600 mt-2">{selectedBill.billNumber}</div>
-              </div>
-
-              {/* Items List */}
-              <div className="space-y-2 py-1">
-                {(selectedBill.items || []).map((it, idx) => (
-                  <div key={idx} className="flex justify-between items-start text-xs">
-                    <div>
-                      <div className="font-bold text-slate-700">{it.itemName}</div>
-                      <div className="text-[10px] text-slate-400">{it.quantity} × ₹{Number(it.unitPrice).toFixed(2)}</div>
-                    </div>
-                    <span className="font-black text-slate-800">₹{Number(it.totalPrice).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Calculation Summary */}
-              <div className="pt-3 border-t border-dashed border-slate-200 space-y-1.5">
-                <div className="flex justify-between text-slate-500 font-medium">
-                  <span>Subtotal</span>
-                  <span>₹{Number(selectedBill.totalAmount).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-slate-500 font-medium">
-                  <span>Discount</span>
-                  <span>-₹{Number(selectedBill.discount || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm font-black text-slate-800 pt-1.5 border-t border-slate-200">
-                  <span>Total Paid</span>
-                  <span className="text-indigo-600">₹{Number(selectedBill.grandTotal).toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="text-center pt-2 text-[10px] text-slate-400 font-medium">
-                Payment: <span className="font-bold text-slate-600">{selectedBill.paymentMethod}</span> • Status: <span className="font-bold text-emerald-600">{selectedBill.status}</span>
-                <div className="mt-1">Thank you for visiting!</div>
-              </div>
-            </div>
+            <ReceiptSlip bill={selectedBill} />
           ) : (
             <div className="py-24 text-center text-xs text-slate-400 font-medium">
               Click on any bill in the list to inspect or reprint the receipt.

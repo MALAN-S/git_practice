@@ -26,3 +26,63 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Print Media Styles - Ensures ONLY the product receipt is printed */
+@media print {
+  @page {
+    size: auto;
+    margin: 6mm;
+  }
+
+  html,
+  body,
+  #root {
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Completely remove sidebar, navigation, catalog, search, and buttons from the print layout */
+  aside,
+  nav,
+  header,
+  button,
+  input,
+  select,
+  .no-print,
+  .print-hidden {
+    display: none !important;
+  }
+
+  /* Hide all elements on the page */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Make ONLY .receipt-slip and its children visible */
+  .receipt-slip,
+  .receipt-slip * {
+    visibility: visible !important;
+  }
+
+  .receipt-slip {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+    padding: 12px !important;
+    border: 1px dashed #94a3b8 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    display: block !important;
+  }
+}

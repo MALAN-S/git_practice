@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import ReceiptSlip from '../components/ReceiptSlip';
 import {
   Search,
   ShoppingCart,
@@ -110,10 +111,10 @@ export default function Billing() {
   const activeRates = serviceRates.filter(r => r.active);
 
   return (
-    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 min-h-full">
+    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 min-h-full print:border-none print:shadow-none print:p-0 print:m-0">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Side: Service & Product Catalog */}
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-6 print:hidden no-print">
           {/* Header & Search */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -207,38 +208,33 @@ export default function Billing() {
         </div>
 
         {/* Right Side: Cart Panel */}
-        <div className="w-full lg:w-96 rounded-2xl bg-slate-50/60 border border-slate-100 p-5 flex flex-col justify-between">
+        <div className="w-full lg:w-96 rounded-2xl bg-slate-50/60 border border-slate-100 p-5 flex flex-col justify-between print:w-full print:p-0 print:border-none print:bg-white print:m-0">
           {billResult ? (
-            <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8" />
+            <div className="flex flex-col items-center space-y-4 w-full">
+              <div className="flex items-center gap-2 text-emerald-600 print:hidden no-print">
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="text-sm font-bold">Receipt Generated Successfully</span>
               </div>
-              <h3 className="text-lg font-black text-slate-800 tracking-tight">Receipt Generated!</h3>
-              <div className="p-4 rounded-2xl bg-white border border-slate-200 w-full space-y-2">
-                <div className="text-xs text-slate-400 font-bold uppercase">Bill Number</div>
-                <div className="text-sm font-black text-indigo-600">{billResult.billNumber}</div>
-                <div className="text-2xl font-black text-slate-800 mt-2">
-                  ₹{Number(billResult.grandTotal).toFixed(2)}
-                </div>
-                <div className="text-[11px] text-slate-500 font-medium">
-                  Paid via {billResult.paymentMethod}
-                </div>
-              </div>
-              <div className="flex gap-2 w-full">
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 w-full print:hidden no-print">
                 <button
                   onClick={() => window.print()}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-md shadow-indigo-100 transition"
                 >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print</span>
+                  <Printer className="w-4 h-4" />
+                  <span>Print Receipt</span>
                 </button>
                 <button
                   onClick={() => setBillResult(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-700"
+                  className="flex-1 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
                 >
                   Next Customer
                 </button>
               </div>
+
+              {/* Detailed Itemized Product Receipt */}
+              <ReceiptSlip bill={billResult} />
             </div>
           ) : (
             <>

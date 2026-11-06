@@ -16,9 +16,9 @@ import Settings from './pages/Settings';
 export default function App() {
   return (
     <Router>
-      <div className="flex h-screen bg-slate-100/70 overflow-hidden font-sans">
+      <div className="flex h-screen bg-slate-100/70 overflow-hidden font-sans print:h-auto print:overflow-visible print:bg-white print:p-0 print:m-0 print:block">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 print:overflow-visible print:p-0 print:m-0 print:h-auto print:block">
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />

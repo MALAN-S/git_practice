@@ -32,7 +32,7 @@ const links = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-white m-3 mr-0 rounded-3xl shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 flex flex-col justify-between p-4 select-none shrink-0">
+    <aside className="w-64 bg-white m-3 mr-0 rounded-3xl shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 flex flex-col justify-between p-4 select-none shrink-0 print:hidden no-print">
       {/* Brand Header */}
       <div>
         <div className="flex items-center gap-3 px-2 py-3 mb-4">
