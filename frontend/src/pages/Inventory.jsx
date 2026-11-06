@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
-import { Boxes, Plus, AlertTriangle, ArrowDown, ArrowUp, RefreshCw, X, History } from 'lucide-react';
+import { Boxes, Plus, AlertTriangle, ArrowDown, ArrowUp, RefreshCw, X, History, UploadCloud } from 'lucide-react';
 
 export default function Inventory() {
   const [products, setProducts] = useState([]);
@@ -50,13 +51,22 @@ export default function Inventory() {
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Inventory</h1>
           <p className="text-xs text-slate-400 font-medium mt-1">Track stationery stock levels, perform stock-in, and view audit trail</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-md shadow-indigo-100"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Stock Entry</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <Link
+            to="/import-csv"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition border border-slate-200/80 shadow-sm"
+          >
+            <UploadCloud className="w-4 h-4 text-indigo-600" />
+            <span>Import CSV</span>
+          </Link>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-md shadow-indigo-100"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Stock Entry</span>
+          </button>
+        </div>
       </div>
 
       {/* Low Stock Warning Banner */}

@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Billing from './pages/Billing';
 import Products from './pages/Products';
+import ImportCsv from './pages/ImportCsv';
 import Services from './pages/Services';
 import Inventory from './pages/Inventory';
 import Reports from './pages/Reports';
@@ -23,6 +24,8 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/billing" element={<Billing />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/import-csv" element={<ImportCsv />} />
+            <Route path="/products/import" element={<ImportCsv />} />
             <Route path="/services" element={<Services />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/reports" element={<Reports />} />

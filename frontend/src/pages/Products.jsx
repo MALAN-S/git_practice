@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import {
-  Package, Plus, Search, Filter, Edit, Trash2, AlertTriangle, CheckCircle2, X
+  Package, Plus, Search, Filter, Edit, Trash2, AlertTriangle, CheckCircle2, X, UploadCloud
 } from 'lucide-react';
 
 export default function Products() {
@@ -82,13 +83,22 @@ export default function Products() {
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Products</h1>
           <p className="text-xs text-slate-400 font-medium mt-1">Manage shop stationery items, pricing, SKU and inventory</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setEditingId(null); setShowModal(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-md shadow-indigo-100"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Product</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <Link
+            to="/import-csv"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition border border-slate-200/80 shadow-sm"
+          >
+            <UploadCloud className="w-4 h-4 text-indigo-600" />
+            <span>Import CSV</span>
+          </Link>
+          <button
+            onClick={() => { resetForm(); setEditingId(null); setShowModal(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-md shadow-indigo-100"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Product</span>
+          </button>
+        </div>
       </div>
 
       {/* Search & Filter Bar */}
@@ -166,7 +176,7 @@ export default function Products() {
               {products.length === 0 && (
                 <tr>
                   <td colSpan="8" className="py-12 text-center text-xs text-slate-400 font-medium">
-                    No products found. Click "Add Product" to create one.
+                    No products found. Click "Add Product" or "Import CSV" to get started.
                   </td>
                 </tr>
               )}
