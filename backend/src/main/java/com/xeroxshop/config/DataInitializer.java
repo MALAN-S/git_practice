@@ -113,3 +113,4 @@ public class DataInitializer implements CommandLineRunner {
 
     private record RateSpec(String paperSize, String sides, BigDecimal price) {}
 }
+
