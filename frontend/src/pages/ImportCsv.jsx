@@ -127,17 +127,7 @@ export default function ImportCsv() {
       link.remove();
     } catch (err) {
       // Fallback client download if API isn't reached
-      const sampleCsv = `Product Name,SKU,Category,Purchase Price,Selling Price,Current Stock,Min Stock Level,Description
-A4 Copier Paper 75 GSM (500 Sheets),P-A4-75,Paper & Stationery,240.00,320.00,50,10,High quality A4 printing paper
-Blue Ball Pen (0.7mm),P-PEN-BLU,Writing,5.00,10.00,100,20,Smooth flow blue ball point pen
-Black Gel Pen,P-PEN-BLK,Writing,12.00,20.00,60,15,Waterproof black gel pen
-Spiral Notebook (160 Pages),P-NOTE-160,Notebooks,45.00,70.00,35,5,Ruled student notebook
-Stapler No. 10,P-STP-10,Desk Accessories,65.00,95.00,20,5,Compact metal stapler
-Stapler Pins No. 10 Box,P-STP-PIN,Desk Accessories,15.00,25.00,40,10,Compatible stapler pin box
-Transparent File Folder A4,P-FLD-CLR,Files & Folders,10.00,20.00,80,15,Plastic document folder
-Sticky Notes 3x3 Yellow,P-STK-YEL,Desk Accessories,25.00,40.00,30,8,Self-adhesive reminder pads
-Permanent Marker Black,P-MKR-BLK,Writing,18.00,30.00,45,10,Bold bullet tip marker
-Calculator 12-Digit,P-CALC-12,Electronics,220.00,350.00,15,3,Dual power desktop calculator`;
+      const sampleCsv = `"Product Name","SKU","Category","Purchase Price","Selling Price","Current Stock","Min Stock Level","Description"\n`;
 
       const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
