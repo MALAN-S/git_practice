@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import ReceiptSlip from '../components/ReceiptSlip';
+import SearchableFilterDropdown from '../components/SearchableFilterDropdown';
 import { History, Search, Printer, Ban, Receipt, CheckCircle, Clock } from 'lucide-react';
 
 export default function BillHistory() {
   const [bills, setBills] = useState([]);
   const [search, setSearch] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState('');
   const [selectedBill, setSelectedBill] = useState(null);
 
   const load = () => {
@@ -28,9 +30,11 @@ export default function BillHistory() {
     }
   };
 
-  const filteredBills = search
-    ? bills.filter(b => b.billNumber.toLowerCase().includes(search.toLowerCase()))
-    : bills;
+  const filteredBills = bills.filter((b) => {
+    if (search && !b.billNumber.toLowerCase().includes(search.toLowerCase().trim())) return false;
+    if (paymentFilter && b.paymentMethod !== paymentFilter) return false;
+    return true;
+  });
 
   return (
     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 min-h-full space-y-6 print:border-none print:shadow-none print:p-0 print:m-0">
@@ -40,15 +44,29 @@ export default function BillHistory() {
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Bill History</h1>
           <p className="text-xs text-slate-400 font-medium mt-1">Search past transactions, reprint customer receipts, or cancel bills</p>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by bill number..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          <SearchableFilterDropdown
+            value={paymentFilter}
+            onChange={(val) => setPaymentFilter(val)}
+            placeholder="All Payment Modes"
+            searchPlaceholder="Search payment mode..."
+            options={[
+              { value: '', label: 'All Payment Modes' },
+              { value: 'CASH', label: 'Cash' },
+              { value: 'UPI', label: 'UPI / QR' },
+              { value: 'CARD', label: 'Card' }
+            ]}
           />
+          <div className="relative flex-1 sm:w-64">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by bill number..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
         </div>
       </div>
 

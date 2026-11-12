@@ -65,7 +65,7 @@ public class ProductController {
 
     @GetMapping(value = "/sample-csv", produces = "text/csv")
     public ResponseEntity<byte[]> downloadSampleCsv() {
-        String csvContent = "\"Product Name\",\"SKU\",\"Category\",\"Purchase Price\",\"Selling Price\",\"Current Stock\",\"Min Stock Level\",\"Description\"\n";
+        String csvContent = "\"S.NO\",\"Product Name (e.g. Pen)\",\"SKU (e.g. PEN-001)\",\"Category (e.g. Stationery)\",\"Purchase Price (e.g. 5.00)\",\"Selling Price (e.g. 10.00)\",\"Current Stock (e.g. 50)\",\"Min Stock Level (e.g. 10)\",\"Description (e.g. Blue ball pen)\"\n";
 
         byte[] bytes = csvContent.getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.ok()

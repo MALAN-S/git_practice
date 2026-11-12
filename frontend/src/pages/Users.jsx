@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Users as UsersIcon, Plus, Trash2, ShieldCheck, UserCheck, X } from 'lucide-react';
+import Modal from '../components/Modal';
+import FormSelect from '../components/FormSelect';
+import {
+  Users as UsersIcon, Plus, Trash2, ShieldCheck, UserCheck, X,
+  UserPlus, User, Lock, Shield, ChevronDown, Check
+} from 'lucide-react';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -68,49 +73,114 @@ export default function Users() {
             </div>
             <button
               onClick={() => handleDelete(u.id)}
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition"
+              className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition"
+              title="Delete User"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 stroke-[2]" />
             </button>
           </div>
         ))}
       </div>
 
       {/* Add User Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-black text-slate-800">Add Staff Account</h3>
-              <button onClick={() => setShowModal(false)}><X className="w-4 h-4 text-slate-400" /></button>
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} maxWidth="max-w-md">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white flex items-center justify-center shadow-lg shadow-indigo-300/50 shrink-0">
+                  <UserPlus className="w-6 h-6 stroke-[2.2]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                    Add Staff Account
+                  </h2>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">
+                    Create POS operator or administrator credentials
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition shadow-sm"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-3">
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+              {/* Username */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Username</label>
-                <input required placeholder="e.g. cashier1" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Username <span className="text-rose-500">*</span>
+                </label>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-100/70 hover:bg-slate-100/90 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 border border-slate-200/50 transition-all duration-200 shadow-inner">
+                  <User className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input
+                    required
+                    placeholder="e.g. cashier1"
+                    value={form.username}
+                    onChange={(e) => setForm({ ...form, username: e.target.value })}
+                    className="w-full bg-transparent border-0 p-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                  />
+                </div>
               </div>
+
+              {/* Password */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Password</label>
-                <input required type="password" placeholder="••••••••" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Password <span className="text-rose-500">*</span>
+                </label>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-100/70 hover:bg-slate-100/90 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 border border-slate-200/50 transition-all duration-200 shadow-inner">
+                  <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input
+                    required
+                    type="password"
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className="w-full bg-transparent border-0 p-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                  />
+                </div>
               </div>
+
+              {/* Role */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Role</label>
-                <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                  <option value="STAFF">Staff (POS & Billing)</option>
-                  <option value="ADMIN">Admin (Full Access)</option>
-                </select>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  System Role <span className="text-rose-500">*</span>
+                </label>
+                <FormSelect
+                  value={form.role}
+                  onChange={(val) => setForm({ ...form, role: val })}
+                  options={[
+                    { value: 'STAFF', label: 'Staff (POS & Billing)' },
+                    { value: 'ADMIN', label: 'Admin (Full Access)' }
+                  ]}
+                  icon={Shield}
+                  triggerClassName="!py-3 !rounded-2xl !bg-slate-100/70 hover:!bg-slate-100/90 !border-slate-200/50 shadow-inner"
+                />
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-700">Create</button>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold transition shadow-md shadow-indigo-300 active:scale-95"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Create Account</span>
+                </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 }

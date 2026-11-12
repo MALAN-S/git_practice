@@ -7,4 +7,14 @@ const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  try {
+    const token = localStorage.getItem('shop_auth_token');
+    if (token) {
+      config.headers.Authorization = token;
+    }
+  } catch {}
+  return config;
+});
+
 export default api;

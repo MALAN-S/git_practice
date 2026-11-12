@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useStoreSettings } from '../services/settings';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { FileText, FileSpreadsheet, TrendingUp, Receipt, ArrowUpRight } from 'lucide-react';
+import { FileText, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function Reports() {
+  const settings = useStoreSettings();
   const [activeTab, setActiveTab] = useState('daily'); // 'daily', 'weekly', 'monthly'
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -16,6 +18,13 @@ export default function Reports() {
   useEffect(() => {
     fetchReport();
   }, [activeTab]);
+
+  const formatDate = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const fetchReport = async () => {
     setLoading(true);
@@ -32,8 +41,8 @@ export default function Reports() {
         start.setDate(today.getDate() - 29);
       }
 
-      const startDate = start.toISOString().split('T')[0];
-      const endDate = end.toISOString().split('T')[0];
+      const startDate = formatDate(start);
+      const endDate = formatDate(end);
 
       const res = await api.get('/reports/range', { params: { startDate, endDate } });
       setReportData(res.data);
@@ -43,20 +52,26 @@ export default function Reports() {
     setLoading(false);
   };
 
-  const totalSales = Number(reportData?.totalSales ?? 3560);
-  const totalBills = Number(reportData?.totalBills ?? 42);
+  const totalSales = Number(reportData?.totalSales ?? 0);
+  const totalBills = Number(reportData?.totalBills ?? 0);
   const avgBillValue = totalBills > 0 ? (totalSales / totalBills) : 0;
 
-  // Chart dataset for sales comparison matching design
-  const chartData = [
-    { date: 'Oct 22', xerox: 450, colorPrint: 720, stationery: 1200 },
-    { date: 'Oct 23', xerox: 780, colorPrint: 420, stationery: 1450 },
-    { date: 'Oct 24', xerox: 1100, colorPrint: 650, stationery: 2100 },
-    { date: 'Oct 25', xerox: 1250, colorPrint: 800, stationery: 1950 },
-    { date: 'Oct 26', xerox: 1350, colorPrint: 900, stationery: 2480 },
-    { date: 'Oct 27', xerox: 1650, colorPrint: 1050, stationery: 2780 },
-    { date: 'Oct 28', xerox: 1850, colorPrint: 1200, stationery: 3200 },
-  ];
+  // Chart dataset dynamically derived from real backend sales
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const chartData = (reportData?.dailySales || []).map(d => {
+    const parts = (d.date || '').split('-');
+    const label = parts.length === 3 
+      ? `${monthNames[parseInt(parts[1], 10) - 1]} ${parseInt(parts[2], 10)}`
+      : d.date;
+
+    return {
+      date: label,
+      xerox: Number(d.xerox ?? 0),
+      colorPrint: Number(d.colorPrint ?? 0),
+      stationery: Number(d.stationery ?? 0),
+      total: Number(d.total ?? 0)
+    };
+  });
 
   // Export to Excel
   const exportExcel = () => {
@@ -69,20 +84,20 @@ export default function Reports() {
       ['Color Print Sales', Number(reportData?.colorPrintSales ?? 0)],
       ['Stationery Sales', Number(reportData?.stationerySales ?? 0)],
       [],
-      ['Day', 'Xerox (₹)', 'Color Print (₹)', 'Stationery (₹)'],
-      ...chartData.map(d => [d.date, d.xerox, d.colorPrint, d.stationery])
+      ['Day', 'Xerox (₹)', 'Color Print (₹)', 'Stationery (₹)', 'Total (₹)'],
+      ...chartData.map(d => [d.date, d.xerox, d.colorPrint, d.stationery, d.total])
     ];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
-    XLSX.writeFile(wb, `Sales_Report_${activeTab}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, `${settings.shopName || 'Shop'} Sales Report`);
+    XLSX.writeFile(wb, `${(settings.shopName || 'Shop').replace(/\s+/g, '_')}_Sales_Report_${activeTab}.xlsx`);
   };
 
   // Export to PDF
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('Shop Analytics & Sales Report', 14, 20);
+    doc.text(`${settings.shopName || 'Shop'} Analytics & Sales Report`, 14, 20);
     doc.setFontSize(10);
     doc.text(`Generated on: ${new Date().toLocaleString()} | Period: ${activeTab.toUpperCase()}`, 14, 28);
 
@@ -100,6 +115,22 @@ export default function Reports() {
       theme: 'striped',
       headStyles: { fillColor: [99, 102, 241] }
     });
+
+    if (chartData.length > 0) {
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 15,
+        head: [['Date', 'Xerox (Rs.)', 'Color Print (Rs.)', 'Stationery (Rs.)', 'Total (Rs.)']],
+        body: chartData.map(d => [
+          d.date,
+          d.xerox.toFixed(2),
+          d.colorPrint.toFixed(2),
+          d.stationery.toFixed(2),
+          d.total.toFixed(2)
+        ]),
+        theme: 'striped',
+        headStyles: { fillColor: [79, 70, 229] }
+      });
+    }
 
     doc.save(`Sales_Report_${activeTab}.pdf`);
   };
@@ -187,7 +218,14 @@ export default function Reports() {
       {/* Sales Comparison Chart Card */}
       <div className="p-6 rounded-2xl bg-slate-50/50 border border-slate-100 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h2 className="text-sm font-black text-slate-800 tracking-tight">Sales Comparison</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-black text-slate-800 tracking-tight">Sales Comparison</h2>
+            {totalSales === 0 && (
+              <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                No sales recorded during this period
+              </span>
+            )}
+          </div>
 
           {/* Legend */}
           <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
@@ -212,7 +250,7 @@ export default function Reports() {
             <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
               <XAxis dataKey="date" stroke="#94a3b8" tick={{ fontSize: 11, fontWeight: 600 }} tickLine={false} />
-              <YAxis stroke="#94a3b8" tick={{ fontSize: 11, fontWeight: 600 }} tickLine={false} />
+              <YAxis domain={[0, totalSales > 0 ? 'auto' : 100]} stroke="#94a3b8" tick={{ fontSize: 11, fontWeight: 600 }} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#ffffff',
@@ -222,6 +260,7 @@ export default function Reports() {
                   fontSize: '12px',
                   fontWeight: '600'
                 }}
+                formatter={(val, name) => [`₹ ${Number(val).toFixed(2)}`, name]}
               />
               <Bar dataKey="xerox" name="Xerox" fill="#0284c7" radius={[4, 4, 0, 0]} />
               <Bar dataKey="colorPrint" name="Color Print" fill="#7c3aed" radius={[4, 4, 0, 0]} />

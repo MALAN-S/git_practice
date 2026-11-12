@@ -164,7 +164,7 @@ export default function ImportCsv() {
       link.remove();
     } catch (err) {
       // Fallback client download if API isn't reached
-      const sampleCsv = `"Product Name","SKU","Category","Purchase Price","Selling Price","Current Stock","Min Stock Level","Description"\n`;
+      const sampleCsv = `"S.NO","Product Name (e.g. Pen)","SKU (e.g. PEN-001)","Category (e.g. Stationery)","Purchase Price (e.g. 5.00)","Selling Price (e.g. 10.00)","Current Stock (e.g. 50)","Min Stock Level (e.g. 10)","Description (e.g. Blue ball pen)"\n`;
       const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -857,7 +857,7 @@ export default function ImportCsv() {
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100 sticky top-0">
                       <tr>
-                        <th className="py-2.5 px-3">#</th>
+                        <th className="py-2.5 px-3">S.NO</th>
                         {previewHeaders.map((h, i) => (
                           <th key={i} className="py-2.5 px-3 whitespace-nowrap">
                             {h}

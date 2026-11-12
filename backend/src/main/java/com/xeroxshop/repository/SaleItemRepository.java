@@ -23,6 +23,30 @@ public interface SaleItemRepository extends JpaRepository<SaleItem, Integer> {
                                          @Param("start") OffsetDateTime start,
                                          @Param("end") OffsetDateTime end);
 
+    @Query("SELECT COALESCE(SUM(si.totalPrice), 0) FROM SaleItem si " +
+           "JOIN si.sale s JOIN si.service svc " +
+           "WHERE LOWER(svc.name) LIKE '%xerox%' " +
+           "AND s.createdAt BETWEEN :start AND :end " +
+           "AND s.status = 'COMPLETED'")
+    BigDecimal sumXeroxSales(@Param("start") OffsetDateTime start,
+                             @Param("end") OffsetDateTime end);
+
+    @Query("SELECT COALESCE(SUM(si.totalPrice), 0) FROM SaleItem si " +
+           "JOIN si.sale s JOIN si.service svc " +
+           "WHERE LOWER(svc.name) LIKE '%color%' " +
+           "AND s.createdAt BETWEEN :start AND :end " +
+           "AND s.status = 'COMPLETED'")
+    BigDecimal sumColorPrintSales(@Param("start") OffsetDateTime start,
+                                  @Param("end") OffsetDateTime end);
+
+    @Query("SELECT COALESCE(SUM(si.totalPrice), 0) FROM SaleItem si " +
+           "JOIN si.sale s " +
+           "WHERE si.product IS NOT NULL " +
+           "AND s.createdAt BETWEEN :start AND :end " +
+           "AND s.status = 'COMPLETED'")
+    BigDecimal sumProductSales(@Param("start") OffsetDateTime start,
+                               @Param("end") OffsetDateTime end);
+
     // Sum sales for service items within a date range
     @Query("SELECT COALESCE(SUM(si.totalPrice), 0) FROM SaleItem si " +
            "JOIN si.sale s " +

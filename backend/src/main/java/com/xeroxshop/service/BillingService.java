@@ -2,18 +2,17 @@ package com.xeroxshop.service;
 
 import com.xeroxshop.dto.*;
 import com.xeroxshop.model.*;
+import com.xeroxshop.model.AppSetting;
 import com.xeroxshop.repository.*;
+import com.xeroxshop.repository.AppSettingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class BillingService {
@@ -36,7 +35,8 @@ public class BillingService {
     @Autowired
     private StockTransactionRepository stockTransactionRepository;
 
-    private final AtomicInteger sequenceCounter = new AtomicInteger(1001);
+    @Autowired
+    private AppSettingRepository appSettingRepository;
 
     @Transactional
     public BillResponse createBill(BillRequest request) {
@@ -44,9 +44,22 @@ public class BillingService {
             throw new RuntimeException("Cannot create an empty bill. Please add at least one item.");
         }
 
-        // Generate Unique Bill Number: e.g. BILL-20261105-1001
-        String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String billNumber = "BILL-" + datePart + "-" + sequenceCounter.getAndIncrement();
+        // Read bill prefix from settings (default "BILL")
+        String prefix = appSettingRepository.findById("billPrefix")
+                .map(AppSetting::getValue)
+                .orElse("BILL");
+
+        // Read and increment bill counter from database
+        int counter = appSettingRepository.findById("billCounter")
+                .map(s -> Integer.parseInt(s.getValue()))
+                .orElse(0);
+        counter++;
+
+        // Save incremented counter back to database
+        appSettingRepository.save(new AppSetting("billCounter", String.valueOf(counter)));
+
+        // Generate bill number: e.g. BILL-001, BILL-002
+        String billNumber = prefix + "-" + String.format("%03d", counter);
 
         Sale sale = new Sale();
         sale.setBillNumber(billNumber);

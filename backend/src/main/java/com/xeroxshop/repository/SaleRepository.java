@@ -16,6 +16,8 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
 
     List<Sale> findByCreatedAtBetweenAndStatus(OffsetDateTime start, OffsetDateTime end, String status);
 
+    List<Sale> findByCreatedAtBetweenAndStatusOrderByCreatedAtDesc(OffsetDateTime start, OffsetDateTime end, String status);
+
     List<Sale> findByCreatedAtBetween(OffsetDateTime start, OffsetDateTime end);
 
     // Count bills created today

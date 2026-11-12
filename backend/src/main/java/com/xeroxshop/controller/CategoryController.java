@@ -25,5 +25,16 @@ public class CategoryController {
     public ResponseEntity<Category> createCategory(@RequestBody Map<String, String> body) {
         return ResponseEntity.ok(categoryService.createCategory(body.get("name")));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Category> updateCategory(@PathVariable Integer id, @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, body.get("name")));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteCategory(@PathVariable Integer id) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity.ok(Map.of("message", "Category deleted successfully"));
+    }
 }
 

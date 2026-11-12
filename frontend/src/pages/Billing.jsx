@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import ReceiptSlip from '../components/ReceiptSlip';
+import SearchableFilterDropdown from '../components/SearchableFilterDropdown';
 import {
   Search,
   ShoppingCart,
@@ -17,6 +18,8 @@ import {
 
 export default function Billing() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [catFilter, setCatFilter] = useState('');
   const [serviceRates, setServiceRates] = useState([]);
   const [cart, setCart] = useState([]);
   const [discount, setDiscount] = useState(0);
@@ -31,6 +34,7 @@ export default function Billing() {
 
   const loadCatalog = () => {
     api.get('/products').then(r => setProducts(r.data)).catch(() => {});
+    api.get('/categories').then(r => setCategories(r.data)).catch(() => {});
     api.get('/service-rates').then(r => setServiceRates(r.data)).catch(() => {});
   };
 
@@ -105,32 +109,53 @@ export default function Billing() {
     setLoading(false);
   };
 
-  const filteredProducts = products.filter(p =>
-    p.status === 'ACTIVE' && p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const activeRates = serviceRates.filter(r => r.active);
+  const filteredProducts = products.filter((p) => {
+    if (p.status !== 'ACTIVE') return false;
+    const matchSearch =
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (!matchSearch) return false;
+    if (catFilter && String(p.categoryId || p.category?.id) !== String(catFilter)) {
+      return false;
+    }
+    return true;
+  });
+  const activeRates = serviceRates.filter((r) => r.active);
 
   return (
-    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 min-h-full print:border-none print:shadow-none print:p-0 print:m-0">
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left Side: Service & Product Catalog */}
-        <div className="flex-1 space-y-6 print:hidden no-print">
-          {/* Header & Search */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-slate-100 min-h-full lg:h-[calc(100vh-3rem)] flex flex-col print:border-none print:shadow-none print:p-0 print:m-0 print:h-auto">
+      <div className="flex flex-col lg:flex-row gap-6 items-stretch flex-1 min-h-0">
+        {/* Left Side: Service & Product Catalog (Scrollable) */}
+        <div className="flex-1 min-w-0 min-h-0 overflow-y-auto pr-2 space-y-6 print:hidden no-print w-full">
+          {/* Header & Search (Sticky at top) */}
+          <div className="sticky top-0 bg-white z-10 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100/80 sm:border-none">
             <div>
               <h1 className="text-2xl font-black text-slate-800 tracking-tight">Billing (POS)</h1>
               <p className="text-xs text-slate-400 font-medium mt-1">Tap items to add to cart → process payment</p>
             </div>
 
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+            <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+              <SearchableFilterDropdown
+                value={catFilter}
+                onChange={(val) => setCatFilter(val)}
+                placeholder="All Categories"
+                searchPlaceholder="Search categories..."
+                options={[
+                  { value: '', label: 'All Categories' },
+                  ...categories.map((c) => ({ value: String(c.id), label: c.name }))
+                ]}
               />
+
+              <div className="relative flex-1 sm:w-64">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search products or SKU..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                />
+              </div>
             </div>
           </div>
 
@@ -145,7 +170,7 @@ export default function Billing() {
                 <button
                   key={rate.id}
                   onClick={() => addServiceToCart(rate)}
-                  className="p-4 rounded-2xl bg-indigo-50/30 hover:bg-indigo-50/70 border border-indigo-100/80 text-left transition duration-200 group flex flex-col justify-between"
+                  className="p-4 rounded-2xl bg-indigo-50/30 hover:bg-indigo-50/70 border border-indigo-100/80 text-left transition duration-200 group flex flex-col justify-between cursor-pointer"
                 >
                   <div>
                     <div className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition leading-tight">
@@ -172,13 +197,13 @@ export default function Billing() {
               <span className="w-2 h-2 rounded-full bg-pink-500" />
               <h2 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Stationery Products</h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {filteredProducts.map(p => (
                 <button
                   key={p.id}
                   disabled={p.currentStock <= 0}
                   onClick={() => addProductToCart(p)}
-                  className={`p-4 rounded-2xl border text-left transition duration-200 flex flex-col justify-between ${
+                  className={`p-4 rounded-2xl border text-left transition duration-200 flex flex-col justify-between cursor-pointer ${
                     p.currentStock <= 0
                       ? 'bg-slate-50 border-slate-200/60 opacity-50 cursor-not-allowed'
                       : 'bg-white hover:bg-slate-50/80 border-slate-200/80 group'
@@ -208,9 +233,9 @@ export default function Billing() {
         </div>
 
         {/* Right Side: Cart Panel */}
-        <div className="w-full lg:w-96 rounded-2xl bg-slate-50/60 border border-slate-100 p-5 flex flex-col justify-between print:w-full print:p-0 print:border-none print:bg-white print:m-0">
+        <div className="w-full lg:w-96 rounded-3xl bg-slate-50/70 border border-slate-200/70 p-5 flex flex-col justify-between shadow-sm print:w-full print:p-0 print:border-none print:bg-white print:m-0 print:static">
           {billResult ? (
-            <div className="flex flex-col items-center space-y-4 w-full">
+            <div className="flex flex-col items-center space-y-4 w-full h-full overflow-y-auto">
               <div className="flex items-center gap-2 text-emerald-600 print:hidden no-print">
                 <CheckCircle2 className="w-5 h-5" />
                 <span className="text-sm font-bold">Receipt Generated Successfully</span>
@@ -237,9 +262,10 @@ export default function Billing() {
               <ReceiptSlip bill={billResult} />
             </div>
           ) : (
-            <>
-              <div>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 mb-3">
+            <div className="flex flex-col h-full justify-between">
+              {/* Top Section: Cart Header & Scrollable Items */}
+              <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 mb-3 shrink-0">
                   <div className="flex items-center gap-2">
                     <ShoppingCart className="w-4 h-4 text-indigo-600" />
                     <h3 className="text-sm font-black text-slate-800">Current Cart</h3>
@@ -250,22 +276,22 @@ export default function Billing() {
                   {cart.length > 0 && (
                     <button
                       onClick={() => setCart([])}
-                      className="text-[11px] font-bold text-rose-500 hover:underline"
+                      className="text-[11px] font-bold text-rose-500 hover:underline cursor-pointer"
                     >
                       Clear
                     </button>
                   )}
                 </div>
 
-                {/* Cart Items */}
-                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                {/* Cart Items List - Internally Scrollable */}
+                <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
                   {cart.length === 0 ? (
-                    <div className="py-16 text-center text-xs text-slate-400 font-medium">
+                    <div className="h-full min-h-[140px] flex flex-col items-center justify-center text-center text-xs text-slate-400 font-medium">
                       Cart is empty.<br />Tap any service or product to add.
                     </div>
                   ) : (
                     cart.map((item, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-white border border-slate-200/70 flex items-center justify-between text-xs">
+                      <div key={idx} className="p-3 rounded-2xl bg-white border border-slate-200/70 flex items-center justify-between text-xs shadow-xs">
                         <div className="flex-1 pr-2">
                           <div className="font-bold text-slate-800 leading-tight">{item.name}</div>
                           <div className="text-[10px] text-slate-400 font-medium mt-0.5">₹{item.price.toFixed(2)} each</div>
@@ -275,14 +301,14 @@ export default function Billing() {
                         <div className="flex items-center gap-1.5 mr-3">
                           <button
                             onClick={() => updateQty(idx, -1)}
-                            className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold"
+                            className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition cursor-pointer"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
                           <span className="w-6 text-center font-black text-slate-800">{item.qty}</span>
                           <button
                             onClick={() => updateQty(idx, 1)}
-                            className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold"
+                            className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition cursor-pointer"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
@@ -297,8 +323,9 @@ export default function Billing() {
                 </div>
               </div>
 
-              {/* Checkout Calculation */}
-              <div className="pt-4 border-t border-slate-200/80 space-y-3 mt-4">
+              {/* Bottom Section: Checkout Calculation */}
+              {/* Aligned at bottom opposite to the admin user profile card */}
+              <div className="pt-3.5 border-t border-slate-200/80 space-y-3 shrink-0 mt-3">
                 <div className="flex justify-between text-xs font-semibold text-slate-500">
                   <span>Subtotal</span>
                   <span className="text-slate-800 font-bold">₹{subtotal.toFixed(2)}</span>
@@ -311,7 +338,7 @@ export default function Billing() {
                     min="0"
                     value={discount}
                     onChange={e => setDiscount(e.target.value)}
-                    className="w-20 px-2.5 py-1 text-right rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-20 px-2.5 py-1 text-right rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   />
                 </div>
 
@@ -334,7 +361,7 @@ export default function Billing() {
                         <button
                           key={m.id}
                           onClick={() => setPaymentMethod(m.id)}
-                          className={`py-2 px-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                          className={`py-2 px-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                             paymentMethod === m.id
                               ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
@@ -351,12 +378,12 @@ export default function Billing() {
                 <button
                   disabled={cart.length === 0 || loading}
                   onClick={handleCheckout}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold text-xs shadow-md shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold text-xs shadow-md shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 active:scale-98 cursor-pointer"
                 >
                   {loading ? 'Processing...' : 'Complete & Generate Bill'}
                 </button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

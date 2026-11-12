@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
-import { Boxes, Plus, AlertTriangle, ArrowDown, ArrowUp, RefreshCw, X, History, UploadCloud } from 'lucide-react';
+import Modal from '../components/Modal';
+import SearchableFilterDropdown from '../components/SearchableFilterDropdown';
+import FormSelect from '../components/FormSelect';
+import {
+  Boxes, Plus, AlertTriangle, ArrowDown, ArrowUp, RefreshCw, X, History, UploadCloud,
+  Box, Layers, ArrowUpDown, FileText, ChevronDown, Check, Search, Filter
+} from 'lucide-react';
 
 export default function Inventory() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [catFilter, setCatFilter] = useState('');
+  const [search, setSearch] = useState('');
   const [lowStock, setLowStock] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -13,6 +22,7 @@ export default function Inventory() {
 
   const load = () => {
     api.get('/products').then(r => setProducts(r.data));
+    api.get('/categories').then(r => setCategories(r.data)).catch(() => {});
     api.get('/inventory/low-stock').then(r => setLowStock(r.data));
   };
   useEffect(load, []);
@@ -89,21 +99,59 @@ export default function Inventory() {
 
       {/* Inventory Stock Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
-                <tr>
-                  <th className="py-3 px-4">Item</th>
-                  <th className="py-3 px-4">SKU</th>
-                  <th className="py-3 px-4">Stock</th>
-                  <th className="py-3 px-4">Min Limit</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Audit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {products.map(p => (
+        <div className="lg:col-span-2 space-y-3">
+          {/* Inventory Search & Category Filter Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search stock item or SKU..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+            <SearchableFilterDropdown
+              value={catFilter}
+              onChange={(val) => setCatFilter(val)}
+              placeholder="All Categories"
+              searchPlaceholder="Search categories..."
+              options={[
+                { value: '', label: 'All Categories' },
+                ...categories.map((c) => ({ value: String(c.id), label: c.name }))
+              ]}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th className="py-3 px-4">Item</th>
+                    <th className="py-3 px-4">SKU</th>
+                    <th className="py-3 px-4">Stock</th>
+                    <th className="py-3 px-4">Min Limit</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Audit</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {products
+                    .filter((p) => {
+                      if (search) {
+                        const term = search.toLowerCase().trim();
+                        const matchName = p.name?.toLowerCase().includes(term);
+                        const matchSku = p.sku?.toLowerCase().includes(term);
+                        if (!matchName && !matchSku) return false;
+                      }
+                      if (catFilter && String(p.categoryId || p.category?.id) !== String(catFilter)) {
+                        return false;
+                      }
+                      return true;
+                    })
+                    .map((p) => (
                   <tr
                     key={p.id}
                     onClick={() => loadTransactions(p)}
@@ -133,6 +181,7 @@ export default function Inventory() {
             </table>
           </div>
         </div>
+      </div>
 
         {/* Transaction History Panel */}
         <div className="rounded-2xl bg-slate-50/60 border border-slate-100 p-5 space-y-4">
@@ -179,51 +228,124 @@ export default function Inventory() {
       </div>
 
       {/* Stock Entry Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-black text-slate-800">Record Stock Transaction</h3>
-              <button onClick={() => setShowModal(false)}><X className="w-4 h-4 text-slate-400" /></button>
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} maxWidth="max-w-lg">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white flex items-center justify-center shadow-lg shadow-indigo-300/50 shrink-0">
+                  <Boxes className="w-6 h-6 stroke-[2.2]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                    Record Stock Transaction
+                  </h2>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">
+                    Adjust stock in, stock out, or log manual physical count
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition shadow-sm"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-3">
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+              {/* Product */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Product</label>
-                <select required value={form.productId} onChange={e => setForm({ ...form, productId: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                  <option value="">Select item</option>
-                  {products.map(p => <option key={p.id} value={p.id}>{p.name} (Stock: {p.currentStock})</option>)}
-                </select>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Select Product <span className="text-rose-500">*</span>
+                </label>
+                <FormSelect
+                  value={form.productId}
+                  onChange={(val) => setForm({ ...form, productId: val })}
+                  options={products.map((p) => ({
+                    value: p.id,
+                    label: `${p.name} (Stock: ${p.currentStock})`
+                  }))}
+                  placeholder="Select item"
+                  icon={Box}
+                  triggerClassName="!py-3 !rounded-2xl !bg-slate-100/70 hover:!bg-slate-100/90 !border-slate-200/50 shadow-inner"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              {/* Type & Quantity Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Type</label>
-                  <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                    <option value="IN">Stock In (+)</option>
-                    <option value="OUT">Stock Out (-)</option>
-                    <option value="ADJUST">Adjustment (=)</option>
-                  </select>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Transaction Type <span className="text-rose-500">*</span>
+                  </label>
+                  <FormSelect
+                    value={form.type}
+                    onChange={(val) => setForm({ ...form, type: val })}
+                    options={[
+                      { value: 'IN', label: 'Stock In (+)' },
+                      { value: 'OUT', label: 'Stock Out (-)' },
+                      { value: 'ADJUST', label: 'Adjustment (=)' }
+                    ]}
+                    icon={ArrowUpDown}
+                    triggerClassName="!py-3 !rounded-2xl !bg-slate-100/70 hover:!bg-slate-100/90 !border-slate-200/50 shadow-inner"
+                  />
                 </div>
+
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Quantity</label>
-                  <input required type="number" min="1" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Quantity <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-100/70 hover:bg-slate-100/90 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 border border-slate-200/50 transition-all duration-200 shadow-inner">
+                    <Layers className="w-4 h-4 text-slate-400 shrink-0" />
+                    <input
+                      required
+                      type="number"
+                      min="1"
+                      value={form.quantity}
+                      onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                      placeholder="e.g. 25"
+                      className="w-full bg-transparent border-0 p-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                    />
+                  </div>
                 </div>
               </div>
+
+              {/* Reference */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Reference / Note</label>
-                <input placeholder="e.g. Supplier Invoice #9912" value={form.reference} onChange={e => setForm({ ...form, reference: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Reference / Note
+                </label>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-100/70 hover:bg-slate-100/90 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 border border-slate-200/50 transition-all duration-200 shadow-inner">
+                  <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                  <input
+                    placeholder="e.g. Supplier Invoice #9912 or Stock count"
+                    value={form.reference}
+                    onChange={(e) => setForm({ ...form, reference: e.target.value })}
+                    className="w-full bg-transparent border-0 p-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                  />
+                </div>
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-700">Submit</button>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold transition shadow-md shadow-indigo-300 active:scale-95"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Submit Entry</span>
+                </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 }

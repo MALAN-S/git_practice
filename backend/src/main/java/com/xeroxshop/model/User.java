@@ -32,6 +32,9 @@ public class User {
     @Column(nullable = false, length = 20)
     private String role; // ADMIN or STAFF
 
+    @Column(columnDefinition = "TEXT DEFAULT ''")
+    private String permissions; // comma-separated page keys for STAFF users
+
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT now()")
     private OffsetDateTime createdAt;
 

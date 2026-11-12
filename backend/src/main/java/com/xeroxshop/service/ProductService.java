@@ -146,8 +146,15 @@ public class ProductService {
             List<String> headers = parseCsvLine(headerLine);
             Map<String, Integer> colMap = new HashMap<>();
             for (int i = 0; i < headers.size(); i++) {
-                String cleanHeader = headers.get(i).trim().toLowerCase().replaceAll("[^a-z0-9]", "");
-                colMap.put(cleanHeader, i);
+                String raw = headers.get(i).trim().toLowerCase();
+                // 1. Full clean string (e.g. "productnameegpen")
+                colMap.put(raw.replaceAll("[^a-z0-9]", ""), i);
+
+                // 2. Clean string without parenthetical hints (e.g. "Product Name (e.g. Pen)" -> "productname")
+                String withoutParens = raw.replaceAll("\\([^)]*\\)", "").trim().toLowerCase().replaceAll("[^a-z0-9]", "");
+                if (!withoutParens.isEmpty()) {
+                    colMap.put(withoutParens, i);
+                }
             }
 
             int nameIdx = getColumnIndex(colMap, "name", "productname", "itemname", "item", "product");
@@ -275,9 +282,19 @@ public class ProductService {
     }
 
     private int getColumnIndex(Map<String, Integer> colMap, String... aliases) {
+        // 1. Direct exact match
         for (String alias : aliases) {
             Integer idx = colMap.get(alias.toLowerCase());
             if (idx != null) return idx;
+        }
+        // 2. Prefix or contains match (e.g. "productnameegpen" starts with "productname")
+        for (String alias : aliases) {
+            String cleanAlias = alias.toLowerCase().replaceAll("[^a-z0-9]", "");
+            for (Map.Entry<String, Integer> entry : colMap.entrySet()) {
+                if (entry.getKey().startsWith(cleanAlias) || entry.getKey().contains(cleanAlias)) {
+                    return entry.getValue();
+                }
+            }
         }
         return -1;
     }

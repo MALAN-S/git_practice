@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -27,10 +28,17 @@ public class UserController {
         return ResponseEntity.ok(userService.createUser(req));
     }
 
+    @PutMapping("/{id}/permissions")
+    public ResponseEntity<UserResponse> updatePermissions(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+        String permissions = body.getOrDefault("permissions", "");
+        return ResponseEntity.ok(userService.updateUserPermissions(id, permissions));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 }
-

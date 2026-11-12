@@ -1,6 +1,8 @@
 import React from 'react';
+import { useStoreSettings } from '../services/settings';
 
 export default function ReceiptSlip({ bill }) {
+  const settings = useStoreSettings();
   if (!bill) return null;
 
   const items = bill.items || [];
@@ -25,8 +27,17 @@ export default function ReceiptSlip({ bill }) {
     <div className="receipt-slip bg-white text-slate-900 p-5 rounded-2xl border border-slate-200 font-mono text-xs w-full max-w-sm mx-auto shadow-sm print:shadow-none print:border print:border-dashed print:border-slate-400 print:p-4 print:max-w-[80mm] print:w-[80mm] print:mx-auto">
       {/* Header */}
       <div className="text-center pb-3 border-b border-dashed border-slate-300">
-        <h2 className="text-base font-black tracking-widest text-slate-900 uppercase">SHOP</h2>
-        <p className="text-[10px] text-slate-500 font-sans mt-0.5">Xerox, Print & Stationery Store</p>
+        <h2 className="text-base font-black tracking-widest text-slate-900 uppercase">
+          {settings.shopName || 'SHOP'}
+        </h2>
+        <p className="text-[10px] text-slate-500 font-sans mt-0.5">
+          {settings.tagline || 'Xerox, Print & Stationery Store'}
+        </p>
+        {settings.headerNote && (
+          <p className="text-[9px] text-slate-600 font-sans mt-0.5 italic">
+            {settings.headerNote}
+          </p>
+        )}
         <p className="text-[9px] text-slate-400 font-sans tracking-wide uppercase mt-0.5">Tax Invoice / Cash Memo</p>
       </div>
 
@@ -107,7 +118,9 @@ export default function ReceiptSlip({ bill }) {
 
       {/* Footer */}
       <div className="text-center pt-3 text-[10px] text-slate-500 font-sans space-y-0.5">
-        <p className="font-bold text-slate-700">Thank you for visiting!</p>
+        <p className="font-bold text-slate-700">
+          {settings.footerNote || 'Thank you for visiting! Please come again.'}
+        </p>
         <p className="text-[9px] text-slate-400">Goods once sold cannot be returned</p>
       </div>
     </div>

@@ -38,12 +38,28 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         // 1. Ensure default Admin user exists (username: admin, password: admin123)
-        if (userRepository.findByUsername("admin").isEmpty()) {
+        var adminOpt = userRepository.findByUsername("admin");
+        if (adminOpt.isEmpty()) {
             User admin = new User();
             admin.setUsername("admin");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole("ADMIN");
+            admin.setPermissions("");
             userRepository.save(admin);
+        } else {
+            User admin = adminOpt.get();
+            boolean changed = false;
+            if (admin.getPermissions() == null) {
+                admin.setPermissions("");
+                changed = true;
+            }
+            if (!passwordEncoder.matches("admin123", admin.getPassword())) {
+                admin.setPassword(passwordEncoder.encode("admin123"));
+                changed = true;
+            }
+            if (changed) {
+                userRepository.save(admin);
+            }
         }
 
         // 2. Ensure default categories exist

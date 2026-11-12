@@ -5,6 +5,8 @@ import java.time.LocalDate;
 
 public record DailySales(
     LocalDate date,
-    BigDecimal total
+    BigDecimal total,
+    BigDecimal xerox,
+    BigDecimal colorPrint,
+    BigDecimal stationery
 ) {}
-

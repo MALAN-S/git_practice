@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,25 +42,34 @@ public class DashboardService {
     private BillingService billingService;
 
     public DashboardResponse getDashboardData() {
-        LocalDate today = LocalDate.now();
-        OffsetDateTime todayStart = today.atStartOfDay().atOffset(ZoneOffset.UTC);
-        OffsetDateTime todayEnd = today.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
+        return getDashboardData(null);
+    }
 
-        BigDecimal todaySales = saleRepository.sumSalesBetween(todayStart, todayEnd);
-        int todayBills = (int) saleRepository.countByCreatedAtBetweenAndStatus(todayStart, todayEnd, "COMPLETED");
+    public DashboardResponse getDashboardData(LocalDate targetDate) {
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate queryDate = (targetDate != null) ? targetDate : LocalDate.now(zone);
+        OffsetDateTime dayStart = queryDate.atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime dayEnd = queryDate.atTime(LocalTime.MAX).atZone(zone).toOffsetDateTime();
 
-        BigDecimal xeroxSales = saleItemRepository.sumSalesByProductCategory("Xerox Services", todayStart, todayEnd);
-        BigDecimal colorPrintSales = saleItemRepository.sumSalesByProductCategory("Color Printing", todayStart, todayEnd);
-        BigDecimal stationerySales = saleItemRepository.sumSalesByProductCategory("Stationery", todayStart, todayEnd);
+        BigDecimal todaySales = saleRepository.sumSalesBetween(dayStart, dayEnd);
+        int todayBills = (int) saleRepository.countByCreatedAtBetweenAndStatus(dayStart, dayEnd, "COMPLETED");
 
-        BigDecimal todayExpenses = expenseRepository.sumExpensesBetween(today, today);
+        BigDecimal xeroxSales = saleItemRepository.sumXeroxSales(dayStart, dayEnd);
+        BigDecimal colorPrintSales = saleItemRepository.sumColorPrintSales(dayStart, dayEnd);
+        BigDecimal stationerySales = saleItemRepository.sumProductSales(dayStart, dayEnd);
+        BigDecimal remaining = todaySales.subtract(xeroxSales).subtract(colorPrintSales);
+        if (remaining.compareTo(BigDecimal.ZERO) > 0 && stationerySales.compareTo(remaining) < 0) {
+            stationerySales = remaining;
+        }
+
+        BigDecimal todayExpenses = expenseRepository.sumExpensesBetween(queryDate, queryDate);
         BigDecimal estimatedProfit = todaySales.subtract(todayExpenses);
 
         List<ProductResponse> lowStockProducts = productRepository.findLowStockProducts().stream()
                 .map(productService::mapToResponse)
                 .collect(Collectors.toList());
 
-        List<BillResponse> recentTransactions = saleRepository.findTop10ByStatusOrderByCreatedAtDesc("COMPLETED").stream()
+        List<BillResponse> recentTransactions = saleRepository.findByCreatedAtBetweenAndStatusOrderByCreatedAtDesc(dayStart, dayEnd, "COMPLETED").stream()
                 .map(billingService::mapToBillResponse)
                 .collect(Collectors.toList());
 

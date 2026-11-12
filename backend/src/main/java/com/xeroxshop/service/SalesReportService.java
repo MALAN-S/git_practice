@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,8 +26,9 @@ public class SalesReportService {
     private SaleItemRepository saleItemRepository;
 
     public ReportResponse getReport(LocalDate startDate, LocalDate endDate) {
-        OffsetDateTime start = startDate.atStartOfDay().atOffset(ZoneOffset.UTC);
-        OffsetDateTime end = endDate.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
+        ZoneId zone = ZoneId.systemDefault();
+        OffsetDateTime start = startDate.atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime end = endDate.atTime(LocalTime.MAX).atZone(zone).toOffsetDateTime();
 
         List<Sale> sales = saleRepository.findByCreatedAtBetweenAndStatus(start, end, "COMPLETED");
 
@@ -47,18 +48,31 @@ public class SalesReportService {
             }
         }
 
-        BigDecimal xeroxSales = saleItemRepository.sumSalesByProductCategory("Xerox Services", start, end);
-        BigDecimal colorPrintSales = saleItemRepository.sumSalesByProductCategory("Color Printing", start, end);
-        BigDecimal stationerySales = saleItemRepository.sumSalesByProductCategory("Stationery", start, end);
+        BigDecimal xeroxSales = saleItemRepository.sumXeroxSales(start, end);
+        BigDecimal colorPrintSales = saleItemRepository.sumColorPrintSales(start, end);
+        BigDecimal stationerySales = saleItemRepository.sumProductSales(start, end);
+        BigDecimal remainingTotal = totalSales.subtract(xeroxSales).subtract(colorPrintSales);
+        if (remainingTotal.compareTo(BigDecimal.ZERO) > 0 && stationerySales.compareTo(remainingTotal) < 0) {
+            stationerySales = remainingTotal;
+        }
 
-        // Daily breakdown
+        // Daily breakdown with actual real categories
         List<DailySales> dailySalesList = new ArrayList<>();
         LocalDate cur = startDate;
         while (!cur.isAfter(endDate)) {
-            OffsetDateTime dayStart = cur.atStartOfDay().atOffset(ZoneOffset.UTC);
-            OffsetDateTime dayEnd = cur.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
+            OffsetDateTime dayStart = cur.atStartOfDay(zone).toOffsetDateTime();
+            OffsetDateTime dayEnd = cur.atTime(LocalTime.MAX).atZone(zone).toOffsetDateTime();
             BigDecimal dayTotal = saleRepository.sumSalesBetween(dayStart, dayEnd);
-            dailySalesList.add(new DailySales(cur, dayTotal));
+            BigDecimal dayXerox = saleItemRepository.sumXeroxSales(dayStart, dayEnd);
+            BigDecimal dayColor = saleItemRepository.sumColorPrintSales(dayStart, dayEnd);
+            BigDecimal dayStationery = saleItemRepository.sumProductSales(dayStart, dayEnd);
+
+            BigDecimal remaining = dayTotal.subtract(dayXerox).subtract(dayColor);
+            if (remaining.compareTo(BigDecimal.ZERO) > 0 && dayStationery.compareTo(remaining) < 0) {
+                dayStationery = remaining;
+            }
+
+            dailySalesList.add(new DailySales(cur, dayTotal, dayXerox, dayColor, dayStationery));
             cur = cur.plusDays(1);
         }
 
@@ -75,4 +89,3 @@ public class SalesReportService {
         );
     }
 }
-

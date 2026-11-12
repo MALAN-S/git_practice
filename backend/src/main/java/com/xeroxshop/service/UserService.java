@@ -24,7 +24,8 @@ public class UserService {
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(u -> new UserResponse(u.getId(), u.getUsername(), u.getRole()))
+                .map(u -> new UserResponse(u.getId(), u.getUsername(), u.getRole(),
+                        u.getPermissions() != null ? u.getPermissions() : ""))
                 .collect(Collectors.toList());
     }
 
@@ -37,15 +38,26 @@ public class UserService {
         user.setUsername(req.username());
         user.setPassword(passwordEncoder.encode(req.password()));
         user.setRole(req.role() != null ? req.role().toUpperCase() : "STAFF");
+        user.setPermissions(req.permissions() != null ? req.permissions() : "");
         user.setCreatedAt(OffsetDateTime.now());
         user.setUpdatedAt(OffsetDateTime.now());
 
         User saved = userRepository.save(user);
-        return new UserResponse(saved.getId(), saved.getUsername(), saved.getRole());
+        return new UserResponse(saved.getId(), saved.getUsername(), saved.getRole(),
+                saved.getPermissions() != null ? saved.getPermissions() : "");
+    }
+
+    public UserResponse updateUserPermissions(UUID id, String permissions) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPermissions(permissions != null ? permissions : "");
+        user.setUpdatedAt(OffsetDateTime.now());
+        User saved = userRepository.save(user);
+        return new UserResponse(saved.getId(), saved.getUsername(), saved.getRole(),
+                saved.getPermissions() != null ? saved.getPermissions() : "");
     }
 
     public void deleteUser(UUID id) {
         userRepository.deleteById(id);
     }
 }
-
