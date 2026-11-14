@@ -13,7 +13,10 @@ import {
   Sparkles,
   CreditCard,
   Banknote,
-  QrCode
+  QrCode,
+  User,
+  Phone,
+  X
 } from 'lucide-react';
 
 export default function Billing() {
@@ -27,6 +30,12 @@ export default function Billing() {
   const [searchTerm, setSearchTerm] = useState('');
   const [billResult, setBillResult] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Partial payment state
+  const [showPartialModal, setShowPartialModal] = useState(false);
+  const [paidAmount, setPaidAmount] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
 
   useEffect(() => {
     loadCatalog();
@@ -84,8 +93,29 @@ export default function Billing() {
   const subtotal = cart.reduce((sum, c) => sum + c.price * c.qty, 0);
   const grandTotal = Math.max(0, subtotal - Number(discount || 0));
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (isPartial = false) => {
     if (cart.length === 0) return;
+
+    if (isPartial) {
+      const paid = Number(paidAmount);
+      if (!paid || paid <= 0) {
+        alert('Please enter a valid paid amount.');
+        return;
+      }
+      if (paid >= grandTotal) {
+        alert('Paid amount must be less than Grand Total for partial payment. Use full payment instead.');
+        return;
+      }
+      if (!customerName.trim()) {
+        alert('Customer name is required for partial payment.');
+        return;
+      }
+      if (!customerPhone.trim()) {
+        alert('Customer phone number is required for partial payment.');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const items = cart.map(c => ({
@@ -94,19 +124,40 @@ export default function Billing() {
         quantity: c.qty,
         unitPrice: c.price
       }));
-      const res = await api.post('/billing/create-bill', {
+
+      const payload = {
         items,
         discount: Number(discount || 0),
         paymentMethod
-      });
+      };
+
+      if (isPartial) {
+        payload.paidAmount = Number(paidAmount);
+        payload.customerName = customerName.trim();
+        payload.customerPhone = customerPhone.trim();
+      }
+
+      const res = await api.post('/billing/create-bill', payload);
       setBillResult(res.data);
       setCart([]);
       setDiscount(0);
+      setShowPartialModal(false);
+      setPaidAmount('');
+      setCustomerName('');
+      setCustomerPhone('');
       loadCatalog();
     } catch (err) {
       alert(err.response?.data?.error || err.message || 'Checkout failed');
     }
     setLoading(false);
+  };
+
+  const openPartialPayment = () => {
+    if (cart.length === 0) return;
+    setPaidAmount('');
+    setCustomerName('');
+    setCustomerPhone('');
+    setShowPartialModal(true);
   };
 
   const filteredProducts = products.filter((p) => {
@@ -375,18 +426,126 @@ export default function Billing() {
                   </div>
                 </div>
 
-                <button
-                  disabled={cart.length === 0 || loading}
-                  onClick={handleCheckout}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold text-xs shadow-md shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 active:scale-98 cursor-pointer"
-                >
-                  {loading ? 'Processing...' : 'Complete & Generate Bill'}
-                </button>
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    disabled={cart.length === 0 || loading}
+                    onClick={() => handleCheckout(false)}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold text-xs shadow-md shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 active:scale-98 cursor-pointer"
+                  >
+                    {loading ? 'Processing...' : 'Full Payment'}
+                  </button>
+                  <button
+                    disabled={cart.length === 0 || loading}
+                    onClick={openPartialPayment}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs shadow-md shadow-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 active:scale-98 cursor-pointer"
+                  >
+                    Partial Payment
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Partial Payment Modal */}
+      {showPartialModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5 relative">
+            {/* Close button */}
+            <button
+              onClick={() => setShowPartialModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"
+            >
+              <X className="w-4 h-4 text-slate-500" />
+            </button>
+
+            <div>
+              <h2 className="text-lg font-black text-slate-800">Partial Payment</h2>
+              <p className="text-xs text-slate-400 font-medium mt-1">
+                Grand Total: <span className="font-bold text-indigo-600">₹{grandTotal.toFixed(2)}</span>
+              </p>
+            </div>
+
+            {/* Paid Amount */}
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1.5 block">Amount Paying Now (₹) *</label>
+              <input
+                type="number"
+                min="1"
+                max={grandTotal - 1}
+                value={paidAmount}
+                onChange={e => setPaidAmount(e.target.value)}
+                placeholder={`Enter amount (max ₹${(grandTotal - 1).toFixed(2)})`}
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+              />
+              {paidAmount && Number(paidAmount) > 0 && Number(paidAmount) < grandTotal && (
+                <p className="text-xs text-amber-600 font-semibold mt-1.5">
+                  Balance remaining: ₹{(grandTotal - Number(paidAmount)).toFixed(2)}
+                </p>
+              )}
+            </div>
+
+            {/* Customer Name */}
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1.5 block">Customer Name *</label>
+              <div className="relative">
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={e => setCustomerName(e.target.value)}
+                  placeholder="Enter customer name"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            {/* Customer Phone */}
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1.5 block">Customer Phone *</label>
+              <div className="relative">
+                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={e => setCustomerPhone(e.target.value)}
+                  placeholder="Enter phone number"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            {/* Summary */}
+            {paidAmount && Number(paidAmount) > 0 && Number(paidAmount) < grandTotal && (
+              <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200/60 space-y-1.5">
+                <div className="flex justify-between text-xs font-semibold text-slate-600">
+                  <span>Grand Total</span>
+                  <span>₹{grandTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xs font-bold text-emerald-700">
+                  <span>Paying Now</span>
+                  <span>₹{Number(paidAmount).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xs font-black text-amber-700 pt-1.5 border-t border-amber-200">
+                  <span>Balance Due</span>
+                  <span>₹{(grandTotal - Number(paidAmount)).toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Submit */}
+            <button
+              disabled={loading || !paidAmount || Number(paidAmount) <= 0 || Number(paidAmount) >= grandTotal || !customerName.trim() || !customerPhone.trim()}
+              onClick={() => handleCheckout(true)}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-sm shadow-md shadow-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 cursor-pointer"
+            >
+              {loading ? 'Processing...' : 'Confirm Partial Payment'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

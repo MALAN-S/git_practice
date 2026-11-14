@@ -23,6 +23,10 @@ export default function ReceiptSlip({ bill }) {
         minute: '2-digit',
       });
 
+  const isPartial = bill.status === 'PARTIAL';
+  const hasPaidAmount = bill.paidAmount != null && Number(bill.paidAmount) > 0;
+  const hasBalance = bill.balanceAmount != null && Number(bill.balanceAmount) > 0;
+
   return (
     <div className="receipt-slip bg-white text-slate-900 p-5 rounded-2xl border border-slate-200 font-mono text-xs w-full max-w-sm mx-auto shadow-sm print:shadow-none print:border print:border-dashed print:border-slate-400 print:p-4 print:max-w-[80mm] print:w-[80mm] print:mx-auto">
       {/* Header */}
@@ -58,7 +62,25 @@ export default function ReceiptSlip({ bill }) {
         {bill.status && (
           <div className="flex justify-between">
             <span className="text-slate-500">Status:</span>
-            <span className="font-bold text-emerald-700">{bill.status}</span>
+            <span className={`font-bold ${
+              isPartial ? 'text-amber-700' : 
+              bill.status === 'COMPLETED' ? 'text-emerald-700' : 'text-rose-600'
+            }`}>
+              {bill.status}
+            </span>
+          </div>
+        )}
+        {/* Customer Info */}
+        {bill.customerName && (
+          <div className="flex justify-between">
+            <span className="text-slate-500">Customer:</span>
+            <span className="font-bold text-slate-900">{bill.customerName}</span>
+          </div>
+        )}
+        {bill.customerPhone && (
+          <div className="flex justify-between">
+            <span className="text-slate-500">Phone:</span>
+            <span className="text-slate-700">{bill.customerPhone}</span>
           </div>
         )}
       </div>
@@ -114,10 +136,29 @@ export default function ReceiptSlip({ bill }) {
           <span>GRAND TOTAL:</span>
           <span>₹{Number(bill.grandTotal).toFixed(2)}</span>
         </div>
+
+        {/* Partial Payment Details */}
+        {hasPaidAmount && (
+          <div className="flex justify-between text-emerald-700 font-sans font-bold">
+            <span>PAID:</span>
+            <span>₹{Number(bill.paidAmount).toFixed(2)}</span>
+          </div>
+        )}
+        {hasBalance && (
+          <div className="flex justify-between text-amber-700 font-sans font-black">
+            <span>BALANCE DUE:</span>
+            <span>₹{Number(bill.balanceAmount).toFixed(2)}</span>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
       <div className="text-center pt-3 text-[10px] text-slate-500 font-sans space-y-0.5">
+        {isPartial && (
+          <p className="font-bold text-amber-700 text-[11px] mb-1">
+            ⚠ Partial Payment - Balance of ₹{Number(bill.balanceAmount).toFixed(2)} pending
+          </p>
+        )}
         <p className="font-bold text-slate-700">
           {settings.footerNote || 'Thank you for visiting! Please come again.'}
         </p>
@@ -126,4 +167,3 @@ export default function ReceiptSlip({ bill }) {
     </div>
   );
 }
-

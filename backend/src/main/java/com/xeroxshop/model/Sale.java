@@ -42,7 +42,19 @@ public class Sale {
     private String paymentMethod; // CASH, UPI, CARD
 
     @Column(nullable = false, length = 15)
-    private String status; // COMPLETED, CANCELLED, REFUNDED
+    private String status; // COMPLETED, CANCELLED, REFUNDED, PARTIAL
+
+    @Column(name = "customer_name", length = 100)
+    private String customerName;
+
+    @Column(name = "customer_phone", length = 20)
+    private String customerPhone;
+
+    @Column(name = "paid_amount", precision = 15, scale = 2)
+    private BigDecimal paidAmount;
+
+    @Column(name = "balance_amount", precision = 15, scale = 2)
+    private BigDecimal balanceAmount;
 
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

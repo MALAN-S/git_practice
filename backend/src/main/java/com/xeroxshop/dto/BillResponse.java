@@ -14,6 +14,9 @@ public record BillResponse(
     String paymentMethod,
     String status,
     OffsetDateTime createdAt,
-    List<BillItemResponse> items
+    List<BillItemResponse> items,
+    BigDecimal paidAmount,
+    BigDecimal balanceAmount,
+    String customerName,
+    String customerPhone
 ) {}
-

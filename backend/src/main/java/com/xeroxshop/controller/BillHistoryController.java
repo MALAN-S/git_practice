@@ -1,6 +1,7 @@
 package com.xeroxshop.controller;
 
 import com.xeroxshop.dto.BillResponse;
+import com.xeroxshop.dto.PayBalanceRequest;
 import com.xeroxshop.dto.RefundRequest;
 import com.xeroxshop.model.Refund;
 import com.xeroxshop.service.BillHistoryService;
@@ -28,9 +29,13 @@ public class BillHistoryController {
         return ResponseEntity.ok(billHistoryService.cancelBill(id));
     }
 
+    @PostMapping("/{id}/pay-balance")
+    public ResponseEntity<BillResponse> payBalance(@PathVariable UUID id, @RequestBody PayBalanceRequest request) {
+        return ResponseEntity.ok(billHistoryService.payBalance(id, request.amount(), request.paymentMethod()));
+    }
+
     @PostMapping("/refund")
     public ResponseEntity<Refund> processRefund(@RequestBody RefundRequest req) {
         return ResponseEntity.ok(billHistoryService.processRefund(req));
     }
 }
-

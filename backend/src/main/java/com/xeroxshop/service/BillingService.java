@@ -63,7 +63,6 @@ public class BillingService {
 
         Sale sale = new Sale();
         sale.setBillNumber(billNumber);
-        sale.setStatus("COMPLETED");
         sale.setPaymentMethod(request.paymentMethod() != null ? request.paymentMethod() : "CASH");
         sale.setDiscount(request.discount() != null ? request.discount() : BigDecimal.ZERO);
 
@@ -130,6 +129,35 @@ public class BillingService {
         }
         sale.setGrandTotal(grandTotal);
 
+        // Handle partial payment
+        BigDecimal paidAmount = request.paidAmount();
+        if (paidAmount != null && paidAmount.compareTo(BigDecimal.ZERO) > 0 && paidAmount.compareTo(grandTotal) < 0) {
+            // Partial payment — require customer info
+            if (request.customerName() == null || request.customerName().isBlank()) {
+                throw new RuntimeException("Customer name is required for partial payment.");
+            }
+            if (request.customerPhone() == null || request.customerPhone().isBlank()) {
+                throw new RuntimeException("Customer phone number is required for partial payment.");
+            }
+            sale.setStatus("PARTIAL");
+            sale.setPaidAmount(paidAmount);
+            sale.setBalanceAmount(grandTotal.subtract(paidAmount));
+            sale.setCustomerName(request.customerName().trim());
+            sale.setCustomerPhone(request.customerPhone().trim());
+        } else {
+            // Full payment
+            sale.setStatus("COMPLETED");
+            sale.setPaidAmount(grandTotal);
+            sale.setBalanceAmount(BigDecimal.ZERO);
+            // Customer info is optional for full payment
+            if (request.customerName() != null && !request.customerName().isBlank()) {
+                sale.setCustomerName(request.customerName().trim());
+            }
+            if (request.customerPhone() != null && !request.customerPhone().isBlank()) {
+                sale.setCustomerPhone(request.customerPhone().trim());
+            }
+        }
+
         Sale savedSale = saleRepository.save(sale);
         for (SaleItem si : saleItems) {
             si.setSale(savedSale);
@@ -140,21 +168,11 @@ public class BillingService {
         Payment payment = new Payment();
         payment.setSale(savedSale);
         payment.setMethod(savedSale.getPaymentMethod());
-        payment.setAmount(grandTotal);
+        payment.setAmount(paidAmount != null && paidAmount.compareTo(BigDecimal.ZERO) > 0 ? paidAmount : grandTotal);
         payment.setTransactionRef(billNumber);
         paymentRepository.save(payment);
 
-        return new BillResponse(
-                savedSale.getId(),
-                savedSale.getBillNumber(),
-                savedSale.getTotalAmount(),
-                savedSale.getDiscount(),
-                savedSale.getGrandTotal(),
-                savedSale.getPaymentMethod(),
-                savedSale.getStatus(),
-                savedSale.getCreatedAt(),
-                itemResponses
-        );
+        return mapToBillResponse(savedSale, itemResponses);
     }
 
     public BillResponse getBillById(UUID id) {
@@ -167,6 +185,24 @@ public class BillingService {
         Sale sale = saleRepository.findByBillNumber(billNumber)
                 .orElseThrow(() -> new RuntimeException("Bill not found with bill number: " + billNumber));
         return mapToBillResponse(sale);
+    }
+
+    private BillResponse mapToBillResponse(Sale sale, List<BillItemResponse> itemResponses) {
+        return new BillResponse(
+                sale.getId(),
+                sale.getBillNumber(),
+                sale.getTotalAmount(),
+                sale.getDiscount(),
+                sale.getGrandTotal(),
+                sale.getPaymentMethod(),
+                sale.getStatus(),
+                sale.getCreatedAt(),
+                itemResponses,
+                sale.getPaidAmount(),
+                sale.getBalanceAmount(),
+                sale.getCustomerName(),
+                sale.getCustomerPhone()
+        );
     }
 
     public BillResponse mapToBillResponse(Sale sale) {
@@ -189,8 +225,11 @@ public class BillingService {
                 sale.getPaymentMethod(),
                 sale.getStatus(),
                 sale.getCreatedAt(),
-                itemResponses
+                itemResponses,
+                sale.getPaidAmount(),
+                sale.getBalanceAmount(),
+                sale.getCustomerName(),
+                sale.getCustomerPhone()
         );
     }
 }
-
