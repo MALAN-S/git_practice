@@ -10,7 +10,6 @@ import {
   Search,
   Filter,
   Pencil,
-  Trash2,
   AlertTriangle,
   CheckCircle2,
   X,
@@ -100,15 +99,25 @@ export default function Products() {
     setShowModal(true);
   };
 
-  const handleDelete = async (p) => {
-    if (!window.confirm(`Are you sure you want to deactivate or delete product '${p.name}'?`)) return;
+  const handleToggleStatus = async (p) => {
+    const newStatus = p.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
-      await api.delete(`/products/${p.id}`);
-      setSuccess(`Product '${p.name}' removed successfully`);
+      await api.put(`/products/${p.id}`, {
+        name: p.name,
+        sku: p.sku,
+        description: p.description || '',
+        purchasePrice: Number(p.purchasePrice),
+        sellingPrice: Number(p.sellingPrice),
+        currentStock: Number(p.currentStock),
+        minStockLevel: Number(p.minStockLevel != null ? p.minStockLevel : 5),
+        status: newStatus,
+        categoryId: p.categoryId || p.category?.id || null
+      });
+      setSuccess(`Product '${p.name}' set to ${newStatus}`);
       fetchData();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || err.response?.data?.error || 'Failed to delete product');
+      alert(err.response?.data?.message || err.response?.data?.error || 'Failed to update product status');
     }
   };
 
@@ -416,15 +425,22 @@ export default function Products() {
 
                       {/* Status Badge */}
                       <td className="py-4 px-4 text-center">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold ${
-                            inStock
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-rose-50 text-rose-700'
+                        <button
+                          onClick={() => handleToggleStatus(p)}
+                          title="Click to toggle Active / Inactive status"
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                            p.status !== 'INACTIVE'
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
                         >
-                          {inStock ? 'In Stock' : 'Out of Stock'}
-                        </span>
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              p.status !== 'INACTIVE' ? 'bg-emerald-500' : 'bg-slate-400'
+                            }`}
+                          />
+                          <span>{p.status !== 'INACTIVE' ? 'Active' : 'Inactive'}</span>
+                        </button>
                       </td>
 
                       {/* Actions */}
@@ -436,13 +452,6 @@ export default function Products() {
                             title="Edit Product"
                           >
                             <Pencil className="w-4 h-4 stroke-[2]" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(p)}
-                            className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition"
-                            title="Delete Product"
-                          >
-                            <Trash2 className="w-4 h-4 stroke-[2]" />
                           </button>
                         </div>
                       </td>

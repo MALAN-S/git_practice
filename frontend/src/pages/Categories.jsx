@@ -4,7 +4,6 @@ import {
   Plus,
   Search,
   Pencil,
-  Trash2,
   X,
   Layers,
   Box,
@@ -89,27 +88,15 @@ export default function Categories() {
     setSubmitting(false);
   };
 
-  const handleDelete = async (cat) => {
-    const productCount = products.filter(
-      p => p.category?.id === cat.id || p.categoryId === cat.id
-    ).length;
-
-    if (productCount > 0) {
-      alert(`Cannot delete '${cat.name}' because it contains ${productCount} product(s). Please reassign or delete those products first.`);
-      return;
-    }
-
-    if (!window.confirm(`Are you sure you want to delete category '${cat.name}'?`)) {
-      return;
-    }
-
+  const handleToggleStatus = async (cat) => {
     try {
-      await api.delete(`/categories/${cat.id}`);
-      setSuccess(`Category '${cat.name}' deleted successfully`);
+      await api.put(`/categories/${cat.id}/toggle-status`);
+      const newStatus = cat.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      setSuccess(`Category '${cat.name}' set to ${newStatus}`);
       fetchData();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete category');
+      alert(err.response?.data?.message || 'Failed to update category status');
     }
   };
 
@@ -312,15 +299,22 @@ export default function Categories() {
 
                       {/* Status Badge */}
                       <td className="py-4 px-6 text-center">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold ${
-                            count > 0
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-slate-100 text-slate-600'
+                        <button
+                          onClick={() => handleToggleStatus(cat)}
+                          title="Click to toggle Active / Inactive status"
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                            cat.status !== 'INACTIVE'
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
                         >
-                          {count > 0 ? 'In Stock' : 'Empty'}
-                        </span>
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              cat.status !== 'INACTIVE' ? 'bg-emerald-500' : 'bg-slate-400'
+                            }`}
+                          />
+                          <span>{cat.status !== 'INACTIVE' ? 'Active' : 'Inactive'}</span>
+                        </button>
                       </td>
 
                       {/* Actions */}
@@ -332,13 +326,6 @@ export default function Categories() {
                             title="Edit Category"
                           >
                             <Pencil className="w-4 h-4 stroke-[2]" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(cat)}
-                            className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition"
-                            title="Delete Category"
-                          >
-                            <Trash2 className="w-4 h-4 stroke-[2]" />
                           </button>
                         </div>
                       </td>

@@ -31,6 +31,11 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.updateCategory(id, body.get("name")));
     }
 
+    @PutMapping("/{id}/toggle-status")
+    public ResponseEntity<Category> toggleCategoryStatus(@PathVariable Integer id) {
+        return ResponseEntity.ok(categoryService.toggleCategoryStatus(id));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteCategory(@PathVariable Integer id) {
         categoryService.deleteCategory(id);

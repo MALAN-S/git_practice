@@ -20,6 +20,9 @@ public class Category {
     @Column(nullable = false, unique = true, length = 50)
     private String name;
 
+    @Column(length = 10)
+    private String status = "ACTIVE"; // ACTIVE or INACTIVE
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
@@ -28,4 +31,3 @@ public class Category {
         this.createdAt = OffsetDateTime.now();
     }
 }
-

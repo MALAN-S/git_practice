@@ -7,7 +7,6 @@ import {
   Plus,
   Search,
   Pencil,
-  Trash2,
   Sliders,
   Layers,
   CheckCircle2,
@@ -190,17 +189,6 @@ export default function Services() {
     }
   };
 
-  const handleDeleteRate = async (id) => {
-    if (!window.confirm('Delete this service rate?')) return;
-    try {
-      await api.delete(`/service-rates/${id}`);
-      setSuccess('Service rate deleted successfully');
-      load();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete rate');
-    }
-  };
 
   // Metrics
   const totalServices = services.length;
@@ -554,13 +542,6 @@ export default function Services() {
                             title="Edit Rate"
                           >
                             <Pencil className="w-4 h-4 stroke-[2]" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteRate(r.id)}
-                            className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition"
-                            title="Delete Rate"
-                          >
-                            <Trash2 className="w-4 h-4 stroke-[2]" />
                           </button>
                         </div>
                       </td>
