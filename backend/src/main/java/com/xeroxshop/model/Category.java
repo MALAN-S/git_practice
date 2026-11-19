@@ -31,4 +31,3 @@ public class Category {
         this.createdAt = OffsetDateTime.now();
     }
 }
-
