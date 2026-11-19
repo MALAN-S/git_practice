@@ -27,6 +27,7 @@ public class CategoryService {
         }
         Category category = new Category();
         category.setName(name.trim());
+        category.setStatus("ACTIVE");
         return categoryRepository.save(category);
     }
 
@@ -37,6 +38,14 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
         category.setName(name.trim());
+        return categoryRepository.save(category);
+    }
+
+    public Category toggleCategoryStatus(Integer id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+        String newStatus = "ACTIVE".equals(category.getStatus()) ? "INACTIVE" : "ACTIVE";
+        category.setStatus(newStatus);
         return categoryRepository.save(category);
     }
 
