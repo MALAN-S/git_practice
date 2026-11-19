@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #f1f5f9;
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Never show the not-allowed (🚫) symbol anywhere throughout the project */
+*,
+*:disabled,
+[disabled],
+.cursor-not-allowed,
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: default !important;
+}
+
+/* Remove increment / decrement spin buttons from all number inputs project-wide */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+button:not(:disabled),
+a,
+[role="button"],
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+/* Custom scrollbar for modern feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Print Media Styles - Ensures ONLY the product receipt is printed */
+@media print {
+  @page {
+    size: auto;
+    margin: 6mm;
+  }
+
+  html,
+  body,
+  #root {
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Completely remove sidebar, navigation, catalog, search, and buttons from the print layout */
+  aside,
+  nav,
+  header,
+  button,
+  input,
+  select,
+  .no-print,
+  .print-hidden {
+    display: none !important;
+  }
+
+  /* Hide all elements on the page */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Make ONLY .receipt-slip and its children visible */
+  .receipt-slip,
+  .receipt-slip * {
+    visibility: visible !important;
+  }
+
+  .receipt-slip {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+    padding: 12px !important;
+    border: 1px dashed #94a3b8 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    display: block !important;
+  }
+}
