@@ -403,12 +403,12 @@ export default function Products() {
 
                       {/* Purchase Price */}
                       <td className="py-4 px-4 text-slate-600 font-semibold">
-                        ₹{Number(p.purchasePrice || 0).toFixed(2)}
+                        ₹{Math.round(Number(p.purchasePrice || 0))}
                       </td>
 
                       {/* Selling Price */}
                       <td className="py-4 px-4 font-black text-blue-600 text-xs">
-                        ₹{Number(p.sellingPrice || 0).toFixed(2)}
+                        ₹{Math.round(Number(p.sellingPrice || 0))}
                       </td>
 
                       {/* Stock */}
@@ -555,10 +555,10 @@ export default function Products() {
                   <input
                     required
                     type="number"
-                    step="0.01"
+                    step="1"
                     value={form.purchasePrice}
                     onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })}
-                    placeholder="0.00"
+                    placeholder="0"
                     className="w-full bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none"
                   />
                 </div>
@@ -573,10 +573,10 @@ export default function Products() {
                   <input
                     required
                     type="number"
-                    step="0.01"
+                    step="1"
                     value={form.sellingPrice}
                     onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })}
-                    placeholder="0.00"
+                    placeholder="0"
                     className="w-full bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none"
                   />
                 </div>

@@ -44,7 +44,7 @@ export default function BillHistory() {
 
   const openPayModal = (bill) => {
     setPayBill(bill);
-    setPayAmount(Number(bill.balanceAmount).toFixed(2));
+    setPayAmount(Math.round(Number(bill.balanceAmount)));
     setPayMethod(bill.paymentMethod || 'CASH');
     setShowPayModal(true);
   };
@@ -57,7 +57,7 @@ export default function BillHistory() {
       return;
     }
     if (amount > Number(payBill.balanceAmount)) {
-      alert(`Amount cannot exceed balance of ₹${Number(payBill.balanceAmount).toFixed(2)}`);
+      alert(`Amount cannot exceed balance of ₹${Math.round(Number(payBill.balanceAmount))}`);
       return;
     }
 
@@ -214,7 +214,7 @@ export default function BillHistory() {
 
                       {/* TOTAL */}
                       <td className="py-3 px-3 align-middle font-black text-slate-800 text-xs whitespace-nowrap text-center">
-                        ₹{Number(b.grandTotal).toFixed(2)}
+                        ₹{Math.round(Number(b.grandTotal))}
                       </td>
 
                       {/* PAID / BALANCE */}
@@ -222,10 +222,10 @@ export default function BillHistory() {
                         {isPartial ? (
                           <div className="space-y-0.5">
                             <div className="font-bold text-emerald-600 text-[11px]">
-                              ₹{Number(b.paidAmount).toFixed(2)} <span className="font-normal text-[9px]">paid</span>
+                              ₹{Math.round(Number(b.paidAmount))} <span className="font-normal text-[9px]">paid</span>
                             </div>
                             <div className="font-bold text-amber-600 text-[11px]">
-                              ₹{Number(b.balanceAmount).toFixed(2)} <span className="font-normal text-[9px]">due</span>
+                              ₹{Math.round(Number(b.balanceAmount))} <span className="font-normal text-[9px]">due</span>
                             </div>
                           </div>
                         ) : (
@@ -307,10 +307,10 @@ export default function BillHistory() {
             <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 flex items-center justify-between print:hidden no-print">
               <div>
                 <div className="text-xs font-bold text-amber-900">
-                  Balance Due: ₹{Number(selectedBill.balanceAmount).toFixed(2)}
+                  Balance Due: ₹{Math.round(Number(selectedBill.balanceAmount))}
                 </div>
                 <div className="text-[10px] text-amber-700 font-medium">
-                  Paid ₹{Number(selectedBill.paidAmount).toFixed(2)} of ₹{Number(selectedBill.grandTotal).toFixed(2)}
+                  Paid ₹{Math.round(Number(selectedBill.paidAmount))} of ₹{Math.round(Number(selectedBill.grandTotal))}
                 </div>
               </div>
               <button
@@ -382,15 +382,15 @@ export default function BillHistory() {
             <div className="bg-amber-50/80 rounded-2xl p-4 border border-amber-200/60 space-y-1.5">
               <div className="flex justify-between text-xs font-semibold text-slate-600">
                 <span>Grand Total</span>
-                <span>₹{Number(payBill.grandTotal).toFixed(2)}</span>
+                <span>₹{Math.round(Number(payBill.grandTotal))}</span>
               </div>
               <div className="flex justify-between text-xs font-semibold text-emerald-700">
                 <span>Already Paid</span>
-                <span>₹{Number(payBill.paidAmount).toFixed(2)}</span>
+                <span>₹{Math.round(Number(payBill.paidAmount))}</span>
               </div>
               <div className="flex justify-between text-xs font-black text-amber-700 pt-1.5 border-t border-amber-200">
                 <span>Balance Due</span>
-                <span>₹{Number(payBill.balanceAmount).toFixed(2)}</span>
+                <span>₹{Math.round(Number(payBill.balanceAmount))}</span>
               </div>
             </div>
           )}

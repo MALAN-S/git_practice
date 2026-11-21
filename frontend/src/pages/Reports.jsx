@@ -77,12 +77,12 @@ export default function Reports() {
   const exportExcel = () => {
     const wsData = [
       ['Metric', 'Value'],
-      ['Total Sales', totalSales],
+      ['Total Sales', Math.round(totalSales)],
       ['Total Bills', totalBills],
-      ['Average Bill Value', avgBillValue.toFixed(2)],
-      ['Xerox Sales', Number(reportData?.xeroxSales ?? 0)],
-      ['Color Print Sales', Number(reportData?.colorPrintSales ?? 0)],
-      ['Stationery Sales', Number(reportData?.stationerySales ?? 0)],
+      ['Average Bill Value', Math.round(avgBillValue)],
+      ['Xerox Sales', Math.round(Number(reportData?.xeroxSales ?? 0))],
+      ['Color Print Sales', Math.round(Number(reportData?.colorPrintSales ?? 0))],
+      ['Stationery Sales', Math.round(Number(reportData?.stationerySales ?? 0))],
       [],
       ['Day', 'Xerox (₹)', 'Color Print (₹)', 'Stationery (₹)', 'Total (₹)'],
       ...chartData.map(d => [d.date, d.xerox, d.colorPrint, d.stationery, d.total])
@@ -105,12 +105,12 @@ export default function Reports() {
       startY: 35,
       head: [['Summary Metric', 'Amount']],
       body: [
-        ['Total Revenue', `Rs. ${totalSales.toFixed(2)}`],
+        ['Total Revenue', `Rs. ${Math.round(totalSales)}`],
         ['Total Transactions', `${totalBills} Bills`],
-        ['Avg Bill Value', `Rs. ${avgBillValue.toFixed(2)}`],
-        ['Xerox Services', `Rs. ${Number(reportData?.xeroxSales ?? 0).toFixed(2)}`],
-        ['Color Printing', `Rs. ${Number(reportData?.colorPrintSales ?? 0).toFixed(2)}`],
-        ['Stationery Products', `Rs. ${Number(reportData?.stationerySales ?? 0).toFixed(2)}`]
+        ['Avg Bill Value', `Rs. ${Math.round(avgBillValue)}`],
+        ['Xerox Services', `Rs. ${Math.round(Number(reportData?.xeroxSales ?? 0))}`],
+        ['Color Printing', `Rs. ${Math.round(Number(reportData?.colorPrintSales ?? 0))}`],
+        ['Stationery Products', `Rs. ${Math.round(Number(reportData?.stationerySales ?? 0))}`]
       ],
       theme: 'striped',
       headStyles: { fillColor: [99, 102, 241] }
@@ -122,10 +122,10 @@ export default function Reports() {
         head: [['Date', 'Xerox (Rs.)', 'Color Print (Rs.)', 'Stationery (Rs.)', 'Total (Rs.)']],
         body: chartData.map(d => [
           d.date,
-          d.xerox.toFixed(2),
-          d.colorPrint.toFixed(2),
-          d.stationery.toFixed(2),
-          d.total.toFixed(2)
+          Math.round(d.xerox),
+          Math.round(d.colorPrint),
+          Math.round(d.stationery),
+          Math.round(d.total)
         ]),
         theme: 'striped',
         headStyles: { fillColor: [79, 70, 229] }
@@ -194,7 +194,7 @@ export default function Reports() {
         <div className="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Sales</span>
           <div className="mt-2 text-2xl font-black text-indigo-700 tracking-tight">
-            ₹ {totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹ {Math.round(totalSales).toLocaleString('en-IN')}
           </div>
         </div>
 
@@ -210,7 +210,7 @@ export default function Reports() {
         <div className="p-5 rounded-2xl bg-fuchsia-50/40 border border-fuchsia-100/80 shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Avg. Bill Value</span>
           <div className="mt-2 text-2xl font-black text-fuchsia-700 tracking-tight">
-            ₹ {avgBillValue.toFixed(2)}
+            ₹ {Math.round(avgBillValue)}
           </div>
         </div>
       </div>
@@ -260,7 +260,7 @@ export default function Reports() {
                   fontSize: '12px',
                   fontWeight: '600'
                 }}
-                formatter={(val, name) => [`₹ ${Number(val).toFixed(2)}`, name]}
+                formatter={(val, name) => [`₹ ${Math.round(Number(val))}`, name]}
               />
               <Bar dataKey="xerox" name="Xerox" fill="#0284c7" radius={[4, 4, 0, 0]} />
               <Bar dataKey="colorPrint" name="Color Print" fill="#7c3aed" radius={[4, 4, 0, 0]} />

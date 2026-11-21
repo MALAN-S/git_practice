@@ -107,9 +107,9 @@ export default function ReceiptSlip({ bill }) {
               </div>
               <div className="flex gap-3 text-right shrink-0">
                 <span className="w-8 text-slate-700 font-medium">{it.quantity}</span>
-                <span className="w-12 text-slate-600 font-sans">₹{Number(it.unitPrice).toFixed(2)}</span>
+                <span className="w-12 text-slate-600 font-sans">₹{Math.round(Number(it.unitPrice))}</span>
                 <span className="w-14 font-bold text-slate-900 font-sans">
-                  ₹{Number(it.totalPrice).toFixed(2)}
+                  ₹{Math.round(Number(it.totalPrice))}
                 </span>
               </div>
             </div>
@@ -124,30 +124,30 @@ export default function ReceiptSlip({ bill }) {
       <div className="py-2.5 border-b border-dashed border-slate-300 space-y-1.5 text-[11px]">
         <div className="flex justify-between text-slate-600 font-sans">
           <span>Items: {items.length} (Qty: {totalQty})</span>
-          <span>₹{Number(bill.totalAmount || bill.grandTotal).toFixed(2)}</span>
+          <span>₹{Math.round(Number(bill.totalAmount || bill.grandTotal))}</span>
         </div>
         {Number(bill.discount) > 0 && (
           <div className="flex justify-between text-emerald-700 font-sans font-semibold">
             <span>Discount:</span>
-            <span>-₹{Number(bill.discount).toFixed(2)}</span>
+            <span>-₹{Math.round(Number(bill.discount))}</span>
           </div>
         )}
         <div className="flex justify-between font-black text-sm text-slate-900 pt-1.5 border-t border-slate-200">
           <span>GRAND TOTAL:</span>
-          <span>₹{Number(bill.grandTotal).toFixed(2)}</span>
+          <span>₹{Math.round(Number(bill.grandTotal))}</span>
         </div>
 
         {/* Partial Payment Details */}
         {hasPaidAmount && (
           <div className="flex justify-between text-emerald-700 font-sans font-bold">
             <span>PAID:</span>
-            <span>₹{Number(bill.paidAmount).toFixed(2)}</span>
+            <span>₹{Math.round(Number(bill.paidAmount))}</span>
           </div>
         )}
         {hasBalance && (
           <div className="flex justify-between text-amber-700 font-sans font-black">
             <span>BALANCE DUE:</span>
-            <span>₹{Number(bill.balanceAmount).toFixed(2)}</span>
+            <span>₹{Math.round(Number(bill.balanceAmount))}</span>
           </div>
         )}
       </div>
@@ -156,7 +156,7 @@ export default function ReceiptSlip({ bill }) {
       <div className="text-center pt-3 text-[10px] text-slate-500 font-sans space-y-0.5">
         {isPartial && (
           <p className="font-bold text-amber-700 text-[11px] mb-1">
-            ⚠ Partial Payment - Balance of ₹{Number(bill.balanceAmount).toFixed(2)} pending
+            ⚠ Partial Payment - Balance of ₹{Math.round(Number(bill.balanceAmount))} pending
           </p>
         )}
         <p className="font-bold text-slate-700">

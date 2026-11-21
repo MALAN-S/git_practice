@@ -227,7 +227,7 @@ export default function Purchases() {
     const grandTotal = Number(purchase.grandTotal || 0);
     const paidAmount = Number(purchase.paidAmount || 0);
     const balance = Math.max(0, grandTotal - paidAmount);
-    setPayAmount(balance.toFixed(2));
+    setPayAmount(Math.round(balance));
     setPayMethod(purchase.paymentMethod || 'CASH');
     setShowPayModal(true);
     loadPaymentHistory(purchase.id);
@@ -246,7 +246,7 @@ export default function Purchases() {
       return;
     }
     if (amount > balance) {
-      alert(`Amount cannot exceed the remaining balance of ₹${balance.toFixed(2)}`);
+      alert(`Amount cannot exceed the remaining balance of ₹${Math.round(balance)}`);
       return;
     }
 
@@ -256,7 +256,7 @@ export default function Purchases() {
         amount,
         paymentMethod: payMethod
       });
-      setSuccess(`Payment of ₹${amount.toFixed(2)} recorded successfully for ${payPurchase.supplier?.name || 'supplier'}!`);
+      setSuccess(`Payment of ₹${Math.round(amount)} recorded successfully for ${payPurchase.supplier?.name || 'supplier'}!`);
       setShowPayModal(false);
       setPayPurchase(null);
       setPayAmount('');
@@ -352,19 +352,19 @@ export default function Purchases() {
             <div className="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 shadow-sm flex flex-col justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Purchases</span>
               <div className="mt-2 text-2xl font-black text-indigo-700 tracking-tight">
-                ₹ {totalSpent.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                ₹ {Math.round(totalSpent).toLocaleString('en-IN')}
               </div>
             </div>
             <div className="p-5 rounded-2xl bg-emerald-50/40 border border-emerald-100/80 shadow-sm flex flex-col justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Paid to Suppliers</span>
               <div className="mt-2 text-2xl font-black text-emerald-700 tracking-tight">
-                ₹ {totalPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                ₹ {Math.round(totalPaid).toLocaleString('en-IN')}
               </div>
             </div>
             <div className="p-5 rounded-2xl bg-amber-50/50 border border-amber-200/70 shadow-sm flex flex-col justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Balance Due (Unpaid)</span>
               <div className="mt-2 text-2xl font-black text-amber-600 tracking-tight">
-                ₹ {totalDue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                ₹ {Math.round(totalDue).toLocaleString('en-IN')}
               </div>
             </div>
             <div className="p-5 rounded-2xl bg-slate-50/60 border border-slate-100 shadow-sm flex flex-col justify-between">
@@ -433,7 +433,7 @@ export default function Purchases() {
                           {p.items?.length || 0}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-black text-indigo-700">₹{Number(p.grandTotal).toFixed(2)}</td>
+                      <td className="py-3.5 px-4 font-black text-indigo-700">₹{Math.round(Number(p.grandTotal))}</td>
                       <td className="py-3.5 px-4">
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
                           {p.paymentMethod}
@@ -450,7 +450,7 @@ export default function Purchases() {
                           </span>
                           {p.paymentStatus !== 'PAID' && (
                             <span className="text-[10px] font-extrabold text-amber-600 mt-0.5">
-                              Due: ₹{(Number(p.grandTotal || 0) - Number(p.paidAmount || 0)).toFixed(2)}
+                              Due: ₹{Math.round(Number(p.grandTotal || 0) - Number(p.paidAmount || 0))}
                             </span>
                           )}
                         </div>
@@ -631,19 +631,19 @@ export default function Purchases() {
                       <td className="py-3 px-4">
                         <input
                           type="number"
-                          step="0.01"
+                          step="1"
                           min="0"
                           required
                           value={it.unitPrice}
                           onChange={e => updateItem(i, 'unitPrice', e.target.value)}
-                          placeholder="0.00"
+                          placeholder="0"
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
                       <td className="py-3 px-4">
                         <input
                           type="number"
-                          step="0.01"
+                          step="1"
                           min="0"
                           value={it.mrp}
                           onChange={e => updateItem(i, 'mrp', e.target.value)}
@@ -653,12 +653,12 @@ export default function Purchases() {
                               addItem();
                             }
                           }}
-                          placeholder="0.00"
+                          placeholder="0"
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
                       <td className="py-3 px-4 text-right font-black text-slate-900 text-sm">
-                        ₹{((Number(it.unitPrice) || 0) * (Number(it.quantity) || 0)).toFixed(2)}
+                        ₹{Math.round((Number(it.unitPrice) || 0) * (Number(it.quantity) || 0))}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
@@ -705,7 +705,7 @@ export default function Purchases() {
               <div className="h-8 w-px bg-slate-200" />
               <div>
                 <span className="text-slate-400 font-bold uppercase text-[10px] block">Gross Amount</span>
-                <span className="text-lg font-black text-indigo-700">₹{itemsTotal.toFixed(2)}</span>
+                <span className="text-lg font-black text-indigo-700">₹{Math.round(itemsTotal)}</span>
               </div>
             </div>
 
@@ -756,14 +756,14 @@ export default function Purchases() {
           <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/80 space-y-2.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-600">Items Gross Total:</span>
-              <span className="font-bold text-slate-800">₹{itemsTotal.toFixed(2)}</span>
+              <span className="font-bold text-slate-800">₹{Math.round(itemsTotal)}</span>
             </div>
 
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-600">Discount (₹):</span>
               <input
                 type="number"
-                step="0.01"
+                step="1"
                 min="0"
                 value={form.discount}
                 onChange={e => setForm({ ...form, discount: e.target.value })}
@@ -777,7 +777,7 @@ export default function Purchases() {
                 <div className="text-[11px] text-slate-400">All line items net of discount</div>
               </div>
               <div className="text-2xl font-black text-indigo-700 tracking-tight">
-                ₹{grandTotal.toFixed(2)}
+                ₹{Math.round(grandTotal)}
               </div>
             </div>
           </div>
@@ -836,15 +836,15 @@ export default function Purchases() {
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  step="0.01"
+                  step="1"
                   required
                   value={form.paidAmount}
                   onChange={e => setForm({ ...form, paidAmount: e.target.value })}
-                  placeholder="0.00"
+                  placeholder="0"
                   className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                 />
                 <div className="text-xs font-bold text-amber-800 shrink-0">
-                  Balance: ₹{Math.max(0, grandTotal - (Number(form.paidAmount) || 0)).toFixed(2)}
+                  Balance: ₹{Math.round(Math.max(0, grandTotal - (Number(form.paidAmount) || 0)))}
                 </div>
               </div>
             </div>
@@ -933,9 +933,9 @@ export default function Purchases() {
                       <tr key={i}>
                         <td className="py-2.5 px-3 font-semibold text-slate-800">{it.itemName || it.product?.name || '—'}</td>
                         <td className="py-2.5 px-3 text-center text-slate-600 font-bold">{it.quantity}</td>
-                        <td className="py-2.5 px-3 text-right text-slate-600">₹{Number(it.unitPrice).toFixed(2)}</td>
-                        <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">₹{Number(it.mrp || 0).toFixed(2)}</td>
-                        <td className="py-2.5 px-3 text-right font-black text-slate-800">₹{Number(it.totalPrice).toFixed(2)}</td>
+                        <td className="py-2.5 px-3 text-right text-slate-600">₹{Math.round(Number(it.unitPrice))}</td>
+                        <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">₹{Math.round(Number(it.mrp || 0))}</td>
+                        <td className="py-2.5 px-3 text-right font-black text-slate-800">₹{Math.round(Number(it.totalPrice))}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -945,24 +945,24 @@ export default function Purchases() {
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 text-xs">
                 <div className="flex justify-between font-semibold text-slate-600">
                   <span>Gross Subtotal:</span>
-                  <span className="font-bold text-slate-800">₹{Number(viewPurchase.totalAmount).toFixed(2)}</span>
+                  <span className="font-bold text-slate-800">₹{Math.round(Number(viewPurchase.totalAmount))}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-slate-600">
                   <span>Discount:</span>
-                  <span className="font-bold text-rose-600">₹{Number(viewPurchase.discount).toFixed(2)}</span>
+                  <span className="font-bold text-rose-600">₹{Math.round(Number(viewPurchase.discount))}</span>
                 </div>
                 <div className="flex justify-between font-black text-slate-900 pt-1.5 border-t border-slate-200">
                   <span>Grand Total:</span>
-                  <span className="text-sm font-black text-indigo-700">₹{Number(viewPurchase.grandTotal).toFixed(2)}</span>
+                  <span className="text-sm font-black text-indigo-700">₹{Math.round(Number(viewPurchase.grandTotal))}</span>
                 </div>
                 <div className="flex justify-between font-bold text-emerald-700">
                   <span>Amount Paid:</span>
-                  <span>₹{Number(viewPurchase.paidAmount || 0).toFixed(2)}</span>
+                  <span>₹{Math.round(Number(viewPurchase.paidAmount || 0))}</span>
                 </div>
                 {viewPurchase.paymentStatus !== 'PAID' && (
                   <div className="flex justify-between font-black text-amber-700 pt-1.5 border-t border-amber-200">
                     <span>Balance Due:</span>
-                    <span className="text-sm">₹{Math.max(0, Number(viewPurchase.grandTotal) - Number(viewPurchase.paidAmount || 0)).toFixed(2)}</span>
+                    <span className="text-sm">₹{Math.round(Math.max(0, Number(viewPurchase.grandTotal) - Number(viewPurchase.paidAmount || 0)))}</span>
                   </div>
                 )}
               </div>
@@ -1003,7 +1003,7 @@ export default function Purchases() {
                                 {ph.paymentMethod}
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-right font-black text-emerald-700">₹{Number(ph.amount).toFixed(2)}</td>
+                            <td className="py-2 px-3 text-right font-black text-emerald-700">₹{Math.round(Number(ph.amount))}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1023,7 +1023,7 @@ export default function Purchases() {
                   className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md shadow-amber-200 transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Pay Remaining Balance (₹{Math.max(0, Number(viewPurchase.grandTotal) - Number(viewPurchase.paidAmount || 0)).toFixed(2)})</span>
+                  <span>Pay Remaining Balance (₹{Math.round(Math.max(0, Number(viewPurchase.grandTotal) - Number(viewPurchase.paidAmount || 0)))})</span>
                 </button>
               )}
             </div>
@@ -1077,15 +1077,15 @@ export default function Purchases() {
               <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-2 text-xs">
                 <div className="flex justify-between font-semibold text-slate-600">
                   <span>Total Bill Amount:</span>
-                  <span className="font-bold text-slate-800">₹{grandTotal.toFixed(2)}</span>
+                  <span className="font-bold text-slate-800">₹{Math.round(grandTotal)}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-emerald-700">
                   <span>Amount Already Paid:</span>
-                  <span className="font-bold">₹{paidAmount.toFixed(2)}</span>
+                  <span className="font-bold">₹{Math.round(paidAmount)}</span>
                 </div>
                 <div className="flex justify-between font-black text-amber-900 pt-2 border-t border-amber-200/80 text-sm">
                   <span>Balance Due:</span>
-                  <span>₹{balance.toFixed(2)}</span>
+                  <span>₹{Math.round(balance)}</span>
                 </div>
               </div>
 
@@ -1119,7 +1119,7 @@ export default function Purchases() {
                                 {ph.paymentMethod}
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-right font-black text-emerald-700">₹{Number(ph.amount).toFixed(2)}</td>
+                            <td className="py-2 px-3 text-right font-black text-emerald-700">₹{Math.round(Number(ph.amount))}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1137,17 +1137,17 @@ export default function Purchases() {
                   <IndianRupee className="w-4 h-4 text-slate-400 shrink-0" />
                   <input
                     type="number"
-                    step="0.01"
-                    min="0.01"
-                    max={balance}
+                    step="1"
+                    min="1"
+                    max={Math.round(balance)}
                     value={payAmount}
                     onChange={e => setPayAmount(e.target.value)}
-                    placeholder="0.00"
+                    placeholder="0"
                     className="w-full bg-transparent border-0 p-0 text-sm font-bold text-slate-800 focus:outline-none focus:ring-0"
                   />
                   <button
                     type="button"
-                    onClick={() => setPayAmount(balance.toFixed(2))}
+                    onClick={() => setPayAmount(Math.round(balance))}
                     className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold transition shrink-0"
                   >
                     Pay Full
@@ -1155,7 +1155,7 @@ export default function Purchases() {
                 </div>
                 {payingNow > 0 && (
                   <p className="text-[11px] font-semibold text-slate-500 mt-1">
-                    Remaining balance after this payment: <span className="font-bold text-slate-700">₹{remainingAfter.toFixed(2)}</span>
+                    Remaining balance after this payment: <span className="font-bold text-slate-700">₹{Math.round(remainingAfter)}</span>
                   </p>
                 )}
               </div>
@@ -1197,7 +1197,7 @@ export default function Purchases() {
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold transition shadow-md shadow-amber-200 active:scale-95 disabled:opacity-50"
                 >
                   <Check className="w-4 h-4 stroke-[2.5]" />
-                  <span>{payLoading ? 'Processing...' : `Confirm Payment of ₹${payingNow.toFixed(2)}`}</span>
+                  <span>{payLoading ? 'Processing...' : `Confirm Payment of ₹${Math.round(payingNow)}`}</span>
                 </button>
               </div>
             </div>

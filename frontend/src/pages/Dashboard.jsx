@@ -167,7 +167,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-3 text-2xl font-black text-indigo-700 tracking-tight">
-            ₹ {todaySales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            ₹ {Math.round(todaySales).toLocaleString('en-IN')}
           </div>
         </div>
 
@@ -197,7 +197,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-3 text-2xl font-black text-rose-600 tracking-tight">
-            ₹ {totalExpenses.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            ₹ {Math.round(totalExpenses).toLocaleString('en-IN')}
           </div>
         </div>
 
@@ -210,7 +210,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-3 text-2xl font-black text-emerald-700 tracking-tight">
-            ₹ {estimatedProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            ₹ {Math.round(estimatedProfit).toLocaleString('en-IN')}
           </div>
         </div>
       </div>
@@ -220,7 +220,7 @@ export default function Dashboard() {
         <div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-100">
           <div className="flex justify-between items-center text-xs font-bold text-slate-500">
             <span>Xerox Services</span>
-            <span className="text-slate-800 font-extrabold">₹{xeroxSales.toFixed(2)}</span>
+            <span className="text-slate-800 font-extrabold">₹{Math.round(xeroxSales)}</span>
           </div>
           <div className="w-full bg-slate-200 h-2 rounded-full mt-2.5 overflow-hidden">
             <div className="bg-sky-500 h-full rounded-full transition-all duration-500" style={{ width: `${todaySales > 0 ? (xeroxSales / todaySales) * 100 : 0}%` }} />
@@ -230,7 +230,7 @@ export default function Dashboard() {
         <div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-100">
           <div className="flex justify-between items-center text-xs font-bold text-slate-500">
             <span>Color Printing</span>
-            <span className="text-slate-800 font-extrabold">₹{colorPrintSales.toFixed(2)}</span>
+            <span className="text-slate-800 font-extrabold">₹{Math.round(colorPrintSales)}</span>
           </div>
           <div className="w-full bg-slate-200 h-2 rounded-full mt-2.5 overflow-hidden">
             <div className="bg-violet-600 h-full rounded-full transition-all duration-500" style={{ width: `${todaySales > 0 ? (colorPrintSales / todaySales) * 100 : 0}%` }} />
@@ -240,7 +240,7 @@ export default function Dashboard() {
         <div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-100">
           <div className="flex justify-between items-center text-xs font-bold text-slate-500">
             <span>Stationery Products</span>
-            <span className="text-slate-800 font-extrabold">₹{stationerySales.toFixed(2)}</span>
+            <span className="text-slate-800 font-extrabold">₹{Math.round(stationerySales)}</span>
           </div>
           <div className="w-full bg-slate-200 h-2 rounded-full mt-2.5 overflow-hidden">
             <div className="bg-pink-500 h-full rounded-full transition-all duration-500" style={{ width: `${todaySales > 0 ? (stationerySales / todaySales) * 100 : 0}%` }} />
@@ -282,7 +282,7 @@ export default function Dashboard() {
                 tickLine={false}
               />
               <Tooltip
-                formatter={(val) => [`₹ ${Number(val).toFixed(2)}`, 'Sales']}
+                formatter={(val) => [`₹ ${Math.round(Number(val))}`, 'Sales']}
                 contentStyle={{
                   backgroundColor: '#ffffff',
                   borderRadius: '16px',
@@ -328,7 +328,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-black text-slate-800">₹{Number(b.grandTotal).toFixed(2)}</div>
+                    <div className="text-xs font-black text-slate-800">₹{Math.round(Number(b.grandTotal))}</div>
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{b.status}</span>
                   </div>
                 </div>

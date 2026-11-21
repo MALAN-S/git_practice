@@ -510,7 +510,7 @@ export default function Services() {
 
                       {/* Rate / Page */}
                       <td className="py-4 px-6 text-center font-black text-slate-900 text-sm">
-                        ₹{Number(r.pricePerPage).toFixed(2)}
+                        ₹{Math.round(r.pricePerPage)}
                       </td>
 
                       {/* Status */}
@@ -725,8 +725,8 @@ export default function Services() {
               <input
                 required
                 type="number"
-                step="0.01"
-                placeholder="e.g. 2.00"
+                step="1"
+                placeholder="e.g. 2"
                 value={rateForm.pricePerPage}
                 onChange={(e) => setRateForm({ ...rateForm, pricePerPage: e.target.value })}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition"

@@ -437,7 +437,7 @@ export default function Billing() {
 
                     <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-sm font-black text-blue-600">
-                        ₹{Number(rate.pricePerPage).toFixed(2)}
+                        ₹{Math.round(rate.pricePerPage)}
                       </span>
                       <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white border border-blue-200 group-hover:border-blue-600 transition shadow-2xs">
                         <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -487,7 +487,7 @@ export default function Billing() {
 
                     <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-sm font-black text-emerald-600">
-                        ₹{Number(rate.pricePerPage).toFixed(2)}
+                        ₹{Math.round(rate.pricePerPage)}
                       </span>
                       <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 group-hover:bg-emerald-600 text-emerald-700 group-hover:text-white border border-emerald-200 group-hover:border-emerald-600 transition shadow-2xs">
                         <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -546,7 +546,7 @@ export default function Billing() {
 
                       <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
                         <span className="text-sm font-black text-amber-800">
-                          ₹{Number(p.sellingPrice).toFixed(2)}
+                          ₹{Math.round(p.sellingPrice)}
                         </span>
                         <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition shadow-2xs ${outOfStock
                             ? 'bg-slate-100 text-slate-400 border border-slate-200'
@@ -600,7 +600,7 @@ export default function Billing() {
 
                     <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-sm font-black text-purple-700">
-                        ₹{Number(rate.pricePerPage).toFixed(2)}
+                        ₹{Math.round(rate.pricePerPage)}
                       </span>
                       <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 group-hover:bg-purple-600 text-purple-700 group-hover:text-white border border-purple-200 group-hover:border-purple-600 transition shadow-2xs">
                         <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -696,7 +696,7 @@ export default function Billing() {
                       <div key={idx} className="p-3 rounded-2xl bg-white border border-slate-200/70 flex items-center justify-between text-xs shadow-xs">
                         <div className="flex-1 pr-2 min-w-0">
                           <div className="font-bold text-slate-800 leading-tight truncate">{item.name}</div>
-                          <div className="text-[10px] text-slate-400 font-medium mt-0.5">₹{Number(item.price || 0).toFixed(2)} each</div>
+                          <div className="text-[10px] text-slate-400 font-medium mt-0.5">₹{Math.round(Number(item.price || 0))} each</div>
                         </div>
 
                         <div className="flex items-center gap-2.5 shrink-0">
@@ -734,9 +734,9 @@ export default function Billing() {
                             <span className="text-xs font-black text-indigo-950">₹</span>
                             <input
                               type="number"
-                              step="0.5"
+                              step="1"
                               min="0"
-                              value={item.customTotalStr !== undefined ? item.customTotalStr : ((Number(item.price) || 0) * (Number(item.qty) || 0)).toFixed(2)}
+                              value={item.customTotalStr !== undefined ? item.customTotalStr : Math.round((Number(item.price) || 0) * (Number(item.qty) || 0))}
                               onChange={(e) => handlePriceChange(idx, e.target.value)}
                               onBlur={() => handlePriceBlur(idx)}
                               className="w-12 text-center text-xs font-black text-indigo-950 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -765,7 +765,7 @@ export default function Billing() {
               <div className="pt-3.5 border-t border-slate-200/80 space-y-3 shrink-0 mt-3">
                 <div className="flex justify-between text-xs font-semibold text-slate-500">
                   <span>Subtotal</span>
-                  <span className="text-slate-800 font-bold">₹{subtotal.toFixed(2)}</span>
+                  <span className="text-slate-800 font-bold">₹{Math.round(subtotal)}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
@@ -781,7 +781,7 @@ export default function Billing() {
 
                 <div className="flex justify-between items-center text-sm font-black text-slate-800 pt-2 border-t border-slate-200/80">
                   <span>Grand Total</span>
-                  <span className="text-xl text-indigo-700">₹{grandTotal.toFixed(2)}</span>
+                  <span className="text-xl text-indigo-700">₹{Math.round(grandTotal)}</span>
                 </div>
 
                 {/* Payment Methods */}
@@ -845,7 +845,7 @@ export default function Billing() {
             <div>
               <h2 className="text-xl font-black text-slate-900 tracking-tight">Partial Payment</h2>
               <p className="text-xs text-slate-400 font-medium mt-0.5">
-                Grand Total: <span className="font-bold text-indigo-600">₹{grandTotal.toFixed(2)}</span>
+                Grand Total: <span className="font-bold text-indigo-600">₹{Math.round(grandTotal)}</span>
               </p>
             </div>
           </div>
@@ -866,15 +866,15 @@ export default function Billing() {
             <input
               type="number"
               min="1"
-              max={grandTotal - 1}
+              max={Math.round(grandTotal - 1)}
               value={paidAmount}
               onChange={e => setPaidAmount(e.target.value)}
-              placeholder={`Enter amount (max ₹${(grandTotal - 1).toFixed(2)})`}
+              placeholder={`Enter amount (max ₹${Math.round(grandTotal - 1)})`}
               className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
             />
             {paidAmount && Number(paidAmount) > 0 && Number(paidAmount) < grandTotal && (
               <p className="text-xs text-amber-600 font-semibold mt-1.5">
-                Balance remaining: ₹{(grandTotal - Number(paidAmount)).toFixed(2)}
+                Balance remaining: ₹{Math.round(grandTotal - Number(paidAmount))}
               </p>
             )}
           </div>
@@ -914,15 +914,15 @@ export default function Billing() {
             <div className="bg-amber-50/80 rounded-2xl p-4 border border-amber-200/60 space-y-1.5">
               <div className="flex justify-between text-xs font-semibold text-slate-600">
                 <span>Grand Total</span>
-                <span>₹{grandTotal.toFixed(2)}</span>
+                <span>₹{Math.round(grandTotal)}</span>
               </div>
               <div className="flex justify-between text-xs font-bold text-emerald-700">
                 <span>Paying Now</span>
-                <span>₹{Number(paidAmount).toFixed(2)}</span>
+                <span>₹{Math.round(Number(paidAmount))}</span>
               </div>
               <div className="flex justify-between text-xs font-black text-amber-700 pt-1.5 border-t border-amber-200">
                 <span>Balance Due</span>
-                <span>₹{(grandTotal - Number(paidAmount)).toFixed(2)}</span>
+                <span>₹{Math.round(grandTotal - Number(paidAmount))}</span>
               </div>
             </div>
           )}

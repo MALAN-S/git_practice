@@ -104,7 +104,7 @@ export default function Expenses() {
         <div className="p-5 rounded-2xl bg-rose-50/40 border border-rose-100/80 shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Recorded Expenses</span>
           <div className="mt-2 text-2xl font-black text-rose-600 tracking-tight">
-            ₹ {total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            ₹ {Math.round(total).toLocaleString('en-IN')}
           </div>
         </div>
 
@@ -118,7 +118,7 @@ export default function Expenses() {
         <div className="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Average per Entry</span>
           <div className="mt-2 text-2xl font-black text-indigo-700 tracking-tight">
-            ₹ {(filteredExpenses.length > 0 ? total / filteredExpenses.length : 0).toFixed(2)}
+            ₹ {Math.round(filteredExpenses.length > 0 ? total / filteredExpenses.length : 0)}
           </div>
         </div>
       </div>
@@ -166,7 +166,7 @@ export default function Expenses() {
               {filteredExpenses.map((e) => (
                 <tr key={e.id} className="hover:bg-slate-50/50 transition">
                   <td className="py-3.5 px-4 font-bold text-slate-800">{e.category}</td>
-                  <td className="py-3.5 px-4 font-black text-rose-600">₹{Number(e.amount).toFixed(2)}</td>
+                  <td className="py-3.5 px-4 font-black text-rose-600">₹{Math.round(Number(e.amount))}</td>
                   <td className="py-3.5 px-4 text-slate-500 font-medium whitespace-nowrap">{formatDate(e.expenseDate)}</td>
                   <td className="py-3.5 px-4 text-slate-500 max-w-xs truncate">{e.description || '—'}</td>
                   <td className="py-3.5 px-4">
@@ -252,8 +252,8 @@ export default function Expenses() {
                     <input
                       required
                       type="number"
-                      step="0.01"
-                      placeholder="0.00"
+                      step="1"
+                      placeholder="0"
                       value={form.amount}
                       onChange={(e) => setForm({ ...form, amount: e.target.value })}
                       className="w-full bg-transparent border-0 p-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0"
