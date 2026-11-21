@@ -588,7 +588,7 @@ export default function Purchases() {
                     <th className="py-3 px-4 w-32 text-right">Purchase Price (₹)</th>
                     <th className="py-3 px-4 w-28 text-right">MRP (₹)</th>
                     <th className="py-3 px-4 w-32 text-right">Line Total</th>
-                    <th className="py-3 px-4 w-12 text-center"></th>
+                    <th className="py-3 px-4 w-20 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -647,6 +647,12 @@ export default function Purchases() {
                           min="0"
                           value={it.mrp}
                           onChange={e => updateItem(i, 'mrp', e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem();
+                            }
+                          }}
                           placeholder="0.00"
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
@@ -655,16 +661,26 @@ export default function Purchases() {
                         ₹{((Number(it.unitPrice) || 0) * (Number(it.quantity) || 0)).toFixed(2)}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        {form.items.length > 1 && (
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => removeItem(i)}
-                            className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 flex items-center justify-center transition mx-auto"
-                            title="Remove line"
+                            onClick={addItem}
+                            className="w-7 h-7 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-700 flex items-center justify-center transition shadow-2xs"
+                            title="Add item row"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
-                        )}
+                          {form.items.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeItem(i)}
+                              className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition shadow-2xs"
+                              title="Remove line"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -672,14 +688,7 @@ export default function Purchases() {
               </table>
             </div>
 
-            <div className="p-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={addItem}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 transition ml-2"
-              >
-                <Plus className="w-4 h-4" /> Add another item row
-              </button>
+            <div className="p-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end">
               <div className="text-xs font-bold text-slate-500 mr-4">
                 Total Rows: <span className="text-slate-800 font-black">{form.items.length}</span>
               </div>
