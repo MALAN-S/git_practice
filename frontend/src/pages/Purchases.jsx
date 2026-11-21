@@ -114,14 +114,14 @@ export default function Purchases() {
     items[i] = { ...items[i], [field]: value };
     if (field === 'productId') {
       if (value) {
-        const prod = products.find(p => p.id === value);
+        const prod = products.find(p => String(p.id) === String(value));
         if (prod) {
           items[i].itemName = prod.name;
           items[i].sku = prod.sku || '';
-          if (prod.purchasePrice) {
+          if (prod.purchasePrice != null && prod.purchasePrice !== '') {
             items[i].unitPrice = prod.purchasePrice;
           }
-          if (prod.sellingPrice) {
+          if (prod.sellingPrice != null && prod.sellingPrice !== '') {
             items[i].mrp = prod.sellingPrice;
           }
         }
@@ -583,22 +583,22 @@ export default function Purchases() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50/50 text-slate-500 font-bold uppercase border-b border-slate-100">
                   <tr>
-                    <th className="py-3 px-3 w-10 text-center">#</th>
-                    <th className="py-3 px-3 w-[23%] min-w-[160px]">Link Product</th>
-                    <th className="py-3 px-3 w-[23%] min-w-[160px]">SKU</th>
-                    <th className="py-3 px-3 w-[23%] min-w-[160px]">Description / Item Name *</th>
-                    <th className="py-3 px-3 w-16 text-center">Qty</th>
-                    <th className="py-3 px-3 w-28 text-right">Purchase Price (₹)</th>
-                    <th className="py-3 px-3 w-24 text-right">MRP (₹)</th>
-                    <th className="py-3 px-3 w-28 text-right">Line Total</th>
-                    <th className="py-3 px-3 w-16 text-center">Actions</th>
+                    <th className="py-3 px-3 w-12 text-center whitespace-nowrap align-middle">#</th>
+                    <th className="py-3 px-3 w-52 min-w-[190px] text-left whitespace-nowrap align-middle">Link Product</th>
+                    <th className="py-3 px-3 w-36 min-w-[130px] text-left whitespace-nowrap align-middle">SKU</th>
+                    <th className="py-3 px-3 min-w-[220px] text-left whitespace-nowrap align-middle">Description / Item Name *</th>
+                    <th className="py-3 px-3 w-20 text-center whitespace-nowrap align-middle">Qty</th>
+                    <th className="py-3 px-3 w-36 text-right whitespace-nowrap align-middle">Purchase Price (₹)</th>
+                    <th className="py-3 px-3 w-28 text-right whitespace-nowrap align-middle">MRP (₹)</th>
+                    <th className="py-3 px-3 w-28 text-right whitespace-nowrap align-middle">Line Total</th>
+                    <th className="py-3 px-3 w-20 text-center whitespace-nowrap align-middle">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {form.items.map((it, i) => (
                     <tr key={i} className="hover:bg-slate-50/40 transition">
-                      <td className="py-3 px-3 text-center text-slate-400 font-bold">{i + 1}</td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 text-center text-slate-400 font-bold align-middle">{i + 1}</td>
+                      <td className="py-3 px-3 align-middle">
                         <select
                           value={it.productId}
                           onChange={e => updateItem(i, 'productId', e.target.value)}
@@ -613,7 +613,7 @@ export default function Purchases() {
                           ))}
                         </select>
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 align-middle">
                         <input
                           value={it.sku || ''}
                           onChange={e => updateItem(i, 'sku', e.target.value)}
@@ -621,7 +621,7 @@ export default function Purchases() {
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 align-middle">
                         <input
                           required
                           value={it.itemName}
@@ -630,7 +630,7 @@ export default function Purchases() {
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 align-middle">
                         <input
                           type="number"
                           min="1"
@@ -640,7 +640,7 @@ export default function Purchases() {
                           className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-center text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 align-middle">
                         <input
                           type="number"
                           step="1"
@@ -649,10 +649,10 @@ export default function Purchases() {
                           value={it.unitPrice}
                           onChange={e => updateItem(i, 'unitPrice', e.target.value)}
                           placeholder="0"
-                          className="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 align-middle">
                         <input
                           type="number"
                           step="1"
@@ -666,13 +666,13 @@ export default function Purchases() {
                             }
                           }}
                           placeholder="0"
-                          className="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3 text-right font-black text-slate-900 text-sm">
+                      <td className="py-3 px-3 text-right font-black text-slate-900 text-sm whitespace-nowrap align-middle">
                         ₹{Math.round((Number(it.unitPrice) || 0) * (Number(it.quantity) || 0))}
                       </td>
-                      <td className="py-3 px-3 text-center">
+                      <td className="py-3 px-3 text-center whitespace-nowrap align-middle">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
