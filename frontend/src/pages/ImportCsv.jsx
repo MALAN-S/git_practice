@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
+import { toast } from '../context/ToastContext';
 import {
   UploadCloud,
   Download,
@@ -264,6 +265,7 @@ export default function ImportCsv() {
       setEstimatedRemainingSeconds(0);
       setUploadStage('complete');
       setStatusMessage(`Completed! ${res.data.importedCount} items imported, ${res.data.skippedCount} skipped.`);
+      toast.success(`Import complete! ${res.data.importedCount} items imported.`);
 
       // Short delay at 100% so user sees completion before displaying result summary
       setTimeout(() => {
@@ -278,6 +280,7 @@ export default function ImportCsv() {
       const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to upload and process CSV file';
       setParseError(msg);
       setStatusMessage(`Import failed: ${msg}`);
+      toast.error(msg);
     }
   };
 

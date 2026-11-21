@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Modal from '../components/Modal';
+import { toast } from '../context/ToastContext';
 import {
   Truck, Plus, Search, Pencil, Trash2, X, Check,
   Phone, Mail, MapPin, Hash, CheckCircle2, AlertCircle
@@ -20,7 +21,6 @@ export default function Suppliers() {
   const [form, setForm] = useState({ ...emptyForm });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -69,16 +69,16 @@ export default function Suppliers() {
     try {
       if (editing) {
         await api.put(`/suppliers/${editing.id}`, form);
-        setSuccess(`Supplier '${form.name}' updated`);
+        toast.success(`Supplier '${form.name}' updated`);
       } else {
         await api.post('/suppliers', form);
-        setSuccess(`Supplier '${form.name}' created`);
+        toast.success(`Supplier '${form.name}' created`);
       }
       setModalOpen(false);
       load();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to save');
+      toast.error(err.response?.data?.message || err.message || 'Failed to save');
     }
     setSubmitting(false);
   };
@@ -87,11 +87,10 @@ export default function Suppliers() {
     if (!window.confirm(`Delete supplier '${s.name}'?`)) return;
     try {
       await api.delete(`/suppliers/${s.id}`);
-      setSuccess(`Supplier '${s.name}' deleted`);
+      toast.success(`Supplier '${s.name}' deleted`);
       load();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Cannot delete supplier — may have linked purchases.');
+      toast.error(err.response?.data?.message || 'Cannot delete supplier — may have linked purchases.');
     }
   };
 
@@ -125,13 +124,6 @@ export default function Suppliers() {
           <span>Add Supplier</span>
         </button>
       </div>
-
-      {success && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -180,7 +172,7 @@ export default function Suppliers() {
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f8f9fa] text-slate-700 font-bold text-xs border-b border-slate-200/80">
               <tr>
-                <th className="py-3.5 px-4 w-12 text-center">#</th>
+                <th className="py-3.5 px-4 w-16 text-center">S.NO</th>
                 <th className="py-3.5 px-4">Supplier Name</th>
                 <th className="py-3.5 px-4">Phone</th>
                 <th className="py-3.5 px-4">Email</th>

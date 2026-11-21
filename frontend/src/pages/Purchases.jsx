@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import api from '../services/api';
 import Modal from '../components/Modal';
+import { toast } from '../context/ToastContext';
 import {
   ShoppingBag, Plus, Search, Trash2, X, Check, Calendar,
   IndianRupee, FileText, Truck, Package, Hash, Banknote,
@@ -72,8 +73,6 @@ export default function Purchases() {
   const [viewPurchase, setViewPurchase] = useState(null);
   const [form, setForm] = useState({ ...emptyForm, items: [{ ...emptyForm.items[0] }] });
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
@@ -142,33 +141,31 @@ export default function Purchases() {
   const handleOpenPaymentModal = (e) => {
     if (e) e.preventDefault();
     if (!form.supplierId) {
-      setError('Please select a supplier before proceeding to payment');
+      toast.error('Please select a supplier before proceeding to payment');
       return;
     }
     if (form.items.some(it => !it.itemName && !it.productId)) {
-      setError('Please provide an item description or choose a product for each line item');
+      toast.error('Please provide an item description or choose a product for each line item');
       return;
     }
     if (form.items.some(it => !it.quantity || Number(it.quantity) <= 0)) {
-      setError('Item quantity must be at least 1');
+      toast.error('Item quantity must be at least 1');
       return;
     }
-    setError(null);
     setShowPaymentModal(true);
   };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!form.supplierId) {
-      setError('Please select a supplier');
+      toast.error('Please select a supplier');
       return;
     }
     if (form.items.some(it => !it.itemName && !it.productId)) {
-      setError('Please provide an item description or choose a product for each line item');
+      toast.error('Please provide an item description or choose a product for each line item');
       return;
     }
     setSubmitting(true);
-    setError(null);
     try {
       const payload = {
         supplierId: Number(form.supplierId),
@@ -189,14 +186,13 @@ export default function Purchases() {
         }))
       };
       await api.post('/purchases', payload);
-      setSuccess('Purchase recorded successfully! Inventory stock updated.');
+      toast.success('Purchase recorded successfully! Inventory stock updated.');
       setShowPaymentModal(false);
       resetForm();
       loadData();
       setView('list');
-      setTimeout(() => setSuccess(null), 4000);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to save purchase');
+      toast.error(err.response?.data?.message || err.message || 'Failed to save purchase');
     }
     setSubmitting(false);
   };
@@ -205,11 +201,10 @@ export default function Purchases() {
     if (!window.confirm('Delete this purchase record?')) return;
     try {
       await api.delete(`/purchases/${id}`);
-      setSuccess('Purchase record deleted');
+      toast.success('Purchase record deleted');
       loadData();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete purchase');
+      toast.error(err.response?.data?.message || 'Failed to delete purchase');
     }
   };
 
@@ -244,11 +239,11 @@ export default function Purchases() {
     const balance = Math.max(0, grandTotal - paidAmount);
 
     if (!amount || amount <= 0) {
-      alert('Please enter a valid payment amount.');
+      toast.error('Please enter a valid payment amount.');
       return;
     }
     if (amount > balance) {
-      alert(`Amount cannot exceed the remaining balance of ₹${Math.round(balance)}`);
+      toast.error(`Amount cannot exceed the remaining balance of ₹${Math.round(balance)}`);
       return;
     }
 
@@ -258,7 +253,7 @@ export default function Purchases() {
         amount,
         paymentMethod: payMethod
       });
-      setSuccess(`Payment of ₹${Math.round(amount)} recorded successfully for ${payPurchase.supplier?.name || 'supplier'}!`);
+      toast.success(`Payment of ₹${Math.round(amount)} recorded successfully for ${payPurchase.supplier?.name || 'supplier'}!`);
       setShowPayModal(false);
       setPayPurchase(null);
       setPayAmount('');
@@ -267,9 +262,8 @@ export default function Purchases() {
         setViewPurchase(res.data);
       }
       loadData();
-      setTimeout(() => setSuccess(null), 4000);
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Payment failed');
+      toast.error(err.response?.data?.message || err.message || 'Payment failed');
     }
     setPayLoading(false);
   };
@@ -291,7 +285,7 @@ export default function Purchases() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          {view === 'create' ? (
+          {view === 'create' && (
             <button
               type="button"
               onClick={() => { resetForm(); setView('list'); }}
@@ -300,10 +294,6 @@ export default function Purchases() {
             >
               <ArrowLeft className="w-5 h-5 stroke-[2.2]" />
             </button>
-          ) : (
-            <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200">
-              <ShoppingBag className="w-5 h-5 stroke-[2.2]" />
-            </div>
           )}
           <div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
@@ -328,23 +318,6 @@ export default function Purchases() {
           </button>
         )}
       </div>
-
-      {/* Notifications */}
-      {success && (
-        <div className="flex items-center justify-between gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-semibold animate-in fade-in">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{success}</span>
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-semibold animate-in fade-in">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* DEFAULT VIEW: PURCHASES OVERVIEW & TABLE (IMAGE 1) */}
       {view === 'list' && (
@@ -403,6 +376,7 @@ export default function Purchases() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80">
                   <tr>
+                    <th className="py-3 px-4 w-16 text-center">S.NO</th>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Supplier</th>
                     <th className="py-3 px-4">Invoice #</th>
@@ -416,12 +390,13 @@ export default function Purchases() {
                 <tbody className="divide-y divide-slate-100">
                   {filteredPurchases.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="py-12 text-center text-xs text-slate-400 font-medium">
+                      <td colSpan="9" className="py-12 text-center text-xs text-slate-400 font-medium">
                         {purchases.length === 0 ? 'No purchases recorded yet.' : 'No purchases matching your search filter.'}
                       </td>
                     </tr>
-                  ) : filteredPurchases.map(p => (
+                  ) : filteredPurchases.map((p, idx) => (
                     <tr key={p.id} className="hover:bg-slate-50/60 transition">
+                      <td className="py-3.5 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
                       <td className="py-3.5 px-4 text-slate-500 font-medium whitespace-nowrap">{formatDate(p.purchaseDate)}</td>
                       <td className="py-3.5 px-4 font-bold text-slate-800">
                         <div className="flex items-center gap-2">
@@ -583,7 +558,7 @@ export default function Purchases() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50/50 text-slate-500 font-bold uppercase border-b border-slate-100">
                   <tr>
-                    <th className="py-3 px-3 w-12 text-center whitespace-nowrap align-middle">#</th>
+                    <th className="py-3 px-3 w-16 text-center whitespace-nowrap align-middle">S.NO</th>
                     <th className="py-3 px-3 w-52 min-w-[190px] text-left whitespace-nowrap align-middle">Link Product</th>
                     <th className="py-3 px-3 w-36 min-w-[130px] text-left whitespace-nowrap align-middle">SKU</th>
                     <th className="py-3 px-3 min-w-[220px] text-left whitespace-nowrap align-middle">Description / Item Name *</th>
@@ -1002,7 +977,7 @@ export default function Purchases() {
                     <table className="w-full text-xs">
                       <thead className="bg-slate-50/60 text-slate-400 font-bold uppercase sticky top-0">
                         <tr>
-                          <th className="py-2 px-3 text-left">#</th>
+                          <th className="py-2 px-3 text-center w-12">S.NO</th>
                           <th className="py-2 px-3 text-left">Date & Time</th>
                           <th className="py-2 px-3 text-center">Method</th>
                           <th className="py-2 px-3 text-right">Amount</th>
@@ -1118,7 +1093,7 @@ export default function Purchases() {
                     <table className="w-full text-xs">
                       <thead className="bg-slate-50/60 text-slate-400 font-bold uppercase sticky top-0">
                         <tr>
-                          <th className="py-2 px-3 text-left">#</th>
+                          <th className="py-2 px-3 text-center w-12">S.NO</th>
                           <th className="py-2 px-3 text-left">Date & Time</th>
                           <th className="py-2 px-3 text-center">Method</th>
                           <th className="py-2 px-3 text-right">Amount</th>

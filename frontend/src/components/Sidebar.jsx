@@ -18,7 +18,6 @@ import {
   Users,
   Settings,
   Search,
-  Mic,
   LogOut,
   PanelLeftClose,
   ChevronDown,
@@ -223,9 +222,8 @@ export default function Sidebar() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search"
-              className="w-full pl-8 pr-8 py-2 bg-slate-200/60 hover:bg-slate-200/80 focus:bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 rounded-xl border border-transparent focus:border-slate-300 focus:outline-none transition-all duration-200"
+              className="w-full pl-8 pr-3 py-2 bg-slate-200/60 hover:bg-slate-200/80 focus:bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 rounded-xl border border-transparent focus:border-slate-300 focus:outline-none transition-all duration-200"
             />
-            <Mic className="w-3.5 h-3.5 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer hover:text-slate-600" />
           </div>
         )}
 

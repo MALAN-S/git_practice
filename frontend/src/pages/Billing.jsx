@@ -3,6 +3,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import ReceiptSlip from '../components/ReceiptSlip';
 import SearchableFilterDropdown from '../components/SearchableFilterDropdown';
+import { toast } from '../context/ToastContext';
 import {
   Search,
   ShoppingCart,
@@ -53,7 +54,7 @@ export default function Billing() {
     const existing = cart.find(c => c.itemId === p.id && c.type === 'PRODUCT');
     if (existing) {
       if (existing.qty >= p.currentStock) {
-        alert(`Cannot add more. Available stock: ${p.currentStock}`);
+        toast.error(`Cannot add more. Available stock: ${p.currentStock}`);
         return;
       }
       setCart(cart.map(c => c === existing ? { ...c, qty: c.qty + 1 } : c));
@@ -83,7 +84,7 @@ export default function Billing() {
       if (i === index) {
         const newQty = (Number(c.qty) || 0) + delta;
         if (c.type === 'PRODUCT' && newQty > c.stock) {
-          alert(`Max stock available: ${c.stock}`);
+          toast.error(`Max stock available: ${c.stock}`);
           return c;
         }
         return newQty > 0 ? { ...c, qty: newQty } : null;
@@ -99,7 +100,7 @@ export default function Billing() {
         const num = parseInt(val, 10);
         if (isNaN(num)) return c;
         if (c.type === 'PRODUCT' && num > c.stock) {
-          alert(`Max stock available: ${c.stock}`);
+          toast.error(`Max stock available: ${c.stock}`);
           return { ...c, qty: c.stock };
         }
         return { ...c, qty: Math.max(1, num) };
@@ -155,19 +156,19 @@ export default function Billing() {
     if (isPartial) {
       const paid = Number(paidAmount);
       if (!paid || paid <= 0) {
-        alert('Please enter a valid paid amount.');
+        toast.error('Please enter a valid paid amount.');
         return;
       }
       if (paid >= grandTotal) {
-        alert('Paid amount must be less than Grand Total for partial payment. Use full payment instead.');
+        toast.error('Paid amount must be less than Grand Total for partial payment. Use full payment instead.');
         return;
       }
       if (!customerName.trim()) {
-        alert('Customer name is required for partial payment.');
+        toast.error('Customer name is required for partial payment.');
         return;
       }
       if (!customerPhone.trim()) {
-        alert('Customer phone number is required for partial payment.');
+        toast.error('Customer phone number is required for partial payment.');
         return;
       }
     }
@@ -194,6 +195,7 @@ export default function Billing() {
       }
 
       const res = await api.post('/billing/create-bill', payload);
+      toast.success(`Bill generated successfully! #${res.data.billNumber}`);
       setBillResult(res.data);
       setCart([]);
       setDiscount(0);
@@ -203,7 +205,7 @@ export default function Billing() {
       setCustomerPhone('');
       loadCatalog();
     } catch (err) {
-      alert(err.response?.data?.error || err.message || 'Checkout failed');
+      toast.error(err.response?.data?.error || err.message || 'Checkout failed');
     }
     setLoading(false);
   };

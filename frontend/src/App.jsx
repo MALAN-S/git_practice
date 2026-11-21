@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { loadSettingsFromServer } from './services/settings';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -88,9 +89,11 @@ function AppLayout() {
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppLayout />
-      </Router>
+      <ToastProvider>
+        <Router>
+          <AppLayout />
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

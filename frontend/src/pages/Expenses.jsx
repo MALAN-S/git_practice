@@ -3,6 +3,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import SearchableFilterDropdown from '../components/SearchableFilterDropdown';
 import FormSelect from '../components/FormSelect';
+import { toast } from '../context/ToastContext';
 import {
   CreditCard, Plus, Trash2, Calendar, Banknote, QrCode, X,
   IndianRupee, Tag, ChevronDown, FileText, Check, Search, Filter
@@ -46,22 +47,32 @@ export default function Expenses() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await api.post('/expenses', { ...form, amount: Number(form.amount) });
-    setForm({
-      category: 'Paper Purchase',
-      amount: '',
-      expenseDate: new Date().toISOString().split('T')[0],
-      description: '',
-      paymentMethod: 'CASH'
-    });
-    setShowModal(false);
-    load();
+    try {
+      await api.post('/expenses', { ...form, amount: Number(form.amount) });
+      toast.success('Expense recorded successfully');
+      setForm({
+        category: 'Paper Purchase',
+        amount: '',
+        expenseDate: new Date().toISOString().split('T')[0],
+        description: '',
+        paymentMethod: 'CASH'
+      });
+      setShowModal(false);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to record expense');
+    }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this expense?')) return;
-    await api.delete(`/expenses/${id}`);
-    load();
+    try {
+      await api.delete(`/expenses/${id}`);
+      toast.success('Expense deleted successfully');
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete expense');
+    }
   };
 
   const filteredExpenses = expenses.filter((e) => {
@@ -154,6 +165,7 @@ export default function Expenses() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
               <tr>
+                <th className="py-3 px-4 w-16 text-center">S.NO</th>
                 <th className="py-3 px-4">Category</th>
                 <th className="py-3 px-4">Amount</th>
                 <th className="py-3 px-4">Date</th>
@@ -163,8 +175,9 @@ export default function Expenses() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredExpenses.map((e) => (
+              {filteredExpenses.map((e, idx) => (
                 <tr key={e.id} className="hover:bg-slate-50/50 transition">
+                  <td className="py-3.5 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
                   <td className="py-3.5 px-4 font-bold text-slate-800">{e.category}</td>
                   <td className="py-3.5 px-4 font-black text-rose-600">₹{Math.round(Number(e.amount))}</td>
                   <td className="py-3.5 px-4 text-slate-500 font-medium whitespace-nowrap">{formatDate(e.expenseDate)}</td>
@@ -187,7 +200,7 @@ export default function Expenses() {
               ))}
               {filteredExpenses.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center text-xs text-slate-400 font-medium">
+                  <td colSpan="7" className="py-12 text-center text-xs text-slate-400 font-medium">
                     {expenses.length === 0
                       ? 'No expenses recorded yet.'
                       : 'No expenses found matching the selected filter.'}

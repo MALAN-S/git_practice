@@ -3,6 +3,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import ReceiptSlip from '../components/ReceiptSlip';
 import SearchableFilterDropdown from '../components/SearchableFilterDropdown';
+import { toast } from '../context/ToastContext';
 import { History, Search, Printer, Receipt, CheckCircle, Clock, X, Banknote, QrCode, CreditCard, AlertCircle, User, Phone, ArrowRight } from 'lucide-react';
 
 export default function BillHistory() {
@@ -36,9 +37,10 @@ export default function BillHistory() {
     if (!window.confirm('Cancel this bill? All product stock will be refunded back to inventory.')) return;
     try {
       await api.post(`/bill-history/${id}/cancel`);
+      toast.success('Bill cancelled and inventory refunded successfully');
       load();
     } catch (err) {
-      alert(err.response?.data?.error || 'Cancellation failed');
+      toast.error(err.response?.data?.error || 'Cancellation failed');
     }
   };
 
@@ -53,11 +55,11 @@ export default function BillHistory() {
     if (!payBill) return;
     const amount = Number(payAmount);
     if (!amount || amount <= 0) {
-      alert('Please enter a valid payment amount.');
+      toast.error('Please enter a valid payment amount.');
       return;
     }
     if (amount > Number(payBill.balanceAmount)) {
-      alert(`Amount cannot exceed balance of ₹${Math.round(Number(payBill.balanceAmount))}`);
+      toast.error(`Amount cannot exceed balance of ₹${Math.round(Number(payBill.balanceAmount))}`);
       return;
     }
 
@@ -67,6 +69,7 @@ export default function BillHistory() {
         amount,
         paymentMethod: payMethod
       });
+      toast.success(`Payment of ₹${Math.round(amount)} recorded successfully!`);
       setShowPayModal(false);
       setPayBill(null);
       setPayAmount('');
@@ -75,7 +78,7 @@ export default function BillHistory() {
       }
       load();
     } catch (err) {
-      alert(err.response?.data?.error || 'Payment failed');
+      toast.error(err.response?.data?.error || 'Payment failed');
     }
     setPayLoading(false);
   };
@@ -146,16 +149,18 @@ export default function BillHistory() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs table-fixed">
               <colgroup>
-                <col className="w-[18%]" />
-                <col className="w-[16%]" />
+                <col className="w-[5%]" />
+                <col className="w-[17%]" />
+                <col className="w-[15%]" />
                 <col className="w-[11%]" />
                 <col className="w-[9%]" />
                 <col className="w-[15%]" />
                 <col className="w-[12%]" />
-                <col className="w-[19%]" />
+                <col className="w-[16%]" />
               </colgroup>
               <thead className="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
                 <tr>
+                  <th className="py-3 px-2 text-center">S.NO</th>
                   <th className="py-3 px-4 text-left">Bill Number</th>
                   <th className="py-3 px-4 text-left">Customer</th>
                   <th className="py-3 px-3 text-center">Date</th>
@@ -166,7 +171,7 @@ export default function BillHistory() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredBills.map(b => {
+                {filteredBills.map((b, idx) => {
                   const isPartial = b.status === 'PARTIAL';
                   const isSelected = selectedBill?.id === b.id;
 
@@ -176,6 +181,9 @@ export default function BillHistory() {
                       onClick={() => setSelectedBill(b)}
                       className={`cursor-pointer transition ${isSelected ? 'bg-indigo-50/50' : 'hover:bg-slate-50/60'}`}
                     >
+                      {/* S.NO / # */}
+                      <td className="py-3 px-2 align-middle text-center text-slate-400 font-bold text-xs">{idx + 1}</td>
+
                       {/* BILL NUMBER */}
                       <td className="py-3 px-4 align-middle text-left whitespace-nowrap">
                         <div className="font-black text-indigo-600 text-xs truncate" title={b.billNumber}>{b.billNumber}</div>
@@ -276,7 +284,7 @@ export default function BillHistory() {
                 })}
                 {filteredBills.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="py-12 text-center text-xs text-slate-400 font-medium">No bills found.</td>
+                    <td colSpan="8" className="py-12 text-center text-xs text-slate-400 font-medium">No bills found.</td>
                   </tr>
                 )}
               </tbody>

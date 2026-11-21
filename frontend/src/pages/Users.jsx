@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import FormSelect from '../components/FormSelect';
+import { toast } from '../context/ToastContext';
 import {
   Users as UsersIcon, Plus, Trash2, ShieldCheck, UserCheck, X,
   UserPlus, User, Lock, Shield, ChevronDown, Check
@@ -21,18 +22,24 @@ export default function Users() {
     e.preventDefault();
     try {
       await api.post('/users', form);
+      toast.success(`User '${form.username}' created successfully`);
       setForm({ username: '', password: '', role: 'STAFF' });
       setShowModal(false);
       load();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to create user');
+      toast.error(err.response?.data?.error || 'Failed to create user');
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this user?')) return;
-    await api.delete(`/users/${id}`);
-    load();
+    try {
+      await api.delete(`/users/${id}`);
+      toast.success('User deleted successfully');
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to delete user');
+    }
   };
 
   return (

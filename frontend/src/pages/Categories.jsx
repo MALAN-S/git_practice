@@ -9,10 +9,12 @@ import {
   Box,
   CheckCircle2,
   Folder,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
+import { toast } from '../context/ToastContext';
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
@@ -27,7 +29,6 @@ export default function Categories() {
   const [categoryName, setCategoryName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -74,16 +75,16 @@ export default function Categories() {
     try {
       if (editingCategory) {
         await api.put(`/categories/${editingCategory.id}`, { name: categoryName.trim() });
-        setSuccess(`Category '${categoryName.trim()}' updated successfully`);
+        toast.success(`Category '${categoryName.trim()}' updated successfully`);
       } else {
         await api.post('/categories', { name: categoryName.trim() });
-        setSuccess(`Category '${categoryName.trim()}' created successfully`);
+        toast.success(`Category '${categoryName.trim()}' created successfully`);
       }
       setModalOpen(false);
       fetchData();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to save category');
+      toast.error(err.response?.data?.message || err.message || 'Failed to save category');
     }
     setSubmitting(false);
   };
@@ -92,11 +93,14 @@ export default function Categories() {
     try {
       await api.put(`/categories/${cat.id}/toggle-status`);
       const newStatus = cat.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-      setSuccess(`Category '${cat.name}' set to ${newStatus}`);
+      if (newStatus === 'INACTIVE') {
+        toast.info(`Category '${cat.name}' set to Inactive`);
+      } else {
+        toast.info(`Category '${cat.name}' set to Active`);
+      }
       fetchData();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update category status');
+      toast.error(err.response?.data?.message || 'Failed to update category status');
     }
   };
 
@@ -140,14 +144,6 @@ export default function Categories() {
           <span>Add Category</span>
         </button>
       </div>
-
-      {/* Success Notification */}
-      {success && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
 
       {/* 4 Metric Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -299,13 +295,11 @@ export default function Categories() {
 
                       {/* Status Badge */}
                       <td className="py-4 px-6 text-center">
-                        <button
-                          onClick={() => handleToggleStatus(cat)}
-                          title="Click to toggle Active / Inactive status"
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
                             cat.status !== 'INACTIVE'
-                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-slate-100 text-slate-600'
                           }`}
                         >
                           <span
@@ -314,7 +308,7 @@ export default function Categories() {
                             }`}
                           />
                           <span>{cat.status !== 'INACTIVE' ? 'Active' : 'Inactive'}</span>
-                        </button>
+                        </span>
                       </td>
 
                       {/* Actions */}
@@ -326,6 +320,13 @@ export default function Categories() {
                             title="Edit Category"
                           >
                             <Pencil className="w-4 h-4 stroke-[2]" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(cat)}
+                            className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition"
+                            title={cat.status !== 'INACTIVE' ? 'Set Inactive' : 'Set Active'}
+                          >
+                            <Trash2 className="w-4 h-4 stroke-[2]" />
                           </button>
                         </div>
                       </td>

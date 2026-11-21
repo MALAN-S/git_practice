@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Store, Printer, Server, CheckCircle2, RotateCcw } from 'lucide-react';
 import { useStoreSettings, saveSettingsToServer, loadSettingsFromServer } from '../services/settings';
 import api from '../services/api';
+import { toast } from '../context/ToastContext';
 
 export default function Settings() {
   const settings = useStoreSettings();
@@ -31,25 +32,35 @@ export default function Settings() {
 
   const handleSaveStore = async () => {
     setSavingStore(true);
-    await saveSettingsToServer({
-      shopName: shopName.trim() || 'Shop',
-      tagline: tagline.trim() || 'Xerox, Print & Stationery Store',
-      billPrefix: billPrefix.trim().toUpperCase() || 'BILL'
-    });
+    try {
+      await saveSettingsToServer({
+        shopName: shopName.trim() || 'Shop',
+        tagline: tagline.trim() || 'Xerox, Print & Stationery Store',
+        billPrefix: billPrefix.trim().toUpperCase() || 'BILL'
+      });
+      setStoreSaved(true);
+      toast.success('Store profile settings saved successfully');
+      setTimeout(() => setStoreSaved(false), 3000);
+    } catch (err) {
+      toast.error('Failed to save store settings');
+    }
     setSavingStore(false);
-    setStoreSaved(true);
-    setTimeout(() => setStoreSaved(false), 3000);
   };
 
   const handleSaveReceipt = async () => {
     setSavingReceipt(true);
-    await saveSettingsToServer({
-      headerNote: headerNote.trim(),
-      footerNote: footerNote.trim()
-    });
+    try {
+      await saveSettingsToServer({
+        headerNote: headerNote.trim(),
+        footerNote: footerNote.trim()
+      });
+      setReceiptSaved(true);
+      toast.success('Receipt header & footer saved successfully');
+      setTimeout(() => setReceiptSaved(false), 3000);
+    } catch (err) {
+      toast.error('Failed to save receipt settings');
+    }
     setSavingReceipt(false);
-    setReceiptSaved(true);
-    setTimeout(() => setReceiptSaved(false), 3000);
   };
 
   const handleResetCounter = async () => {
@@ -59,9 +70,11 @@ export default function Settings() {
       await api.post('/settings/reset-bill-counter');
       await loadSettingsFromServer();
       setCounterReset(true);
+      toast.success('Bill counter reset to 001');
       setTimeout(() => setCounterReset(false), 3000);
     } catch (e) {
       console.error('Failed to reset counter:', e);
+      toast.error('Failed to reset bill counter');
     }
     setResettingCounter(false);
   };

@@ -4,6 +4,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import SearchableFilterDropdown from '../components/SearchableFilterDropdown';
 import FormSelect from '../components/FormSelect';
+import { toast } from '../context/ToastContext';
 import {
   Package,
   Plus,
@@ -21,7 +22,8 @@ import {
   IndianRupee,
   Bell,
   ChevronDown,
-  Folder
+  Folder,
+  Trash2
 } from 'lucide-react';
 
 export default function Products() {
@@ -31,9 +33,6 @@ export default function Products() {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // 'all', 'in_stock', 'low_stock'
-
-  // Notification
-  const [success, setSuccess] = useState(null);
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -113,11 +112,14 @@ export default function Products() {
         status: newStatus,
         categoryId: p.categoryId || p.category?.id || null
       });
-      setSuccess(`Product '${p.name}' set to ${newStatus}`);
+      if (newStatus === 'INACTIVE') {
+        toast.info(`Product '${p.name}' set to Inactive`);
+      } else {
+        toast.info(`Product '${p.name}' set to Active`);
+      }
       fetchData();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || err.response?.data?.error || 'Failed to update product status');
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to update product status');
     }
   };
 
@@ -135,18 +137,17 @@ export default function Products() {
     try {
       if (editingId) {
         await api.put(`/products/${editingId}`, payload);
-        setSuccess(`Product '${form.name}' updated successfully`);
+        toast.success(`Product '${form.name}' updated successfully`);
       } else {
         await api.post('/products', payload);
-        setSuccess(`Product '${form.name}' created successfully`);
+        toast.success(`Product '${form.name}' created successfully`);
       }
       setShowModal(false);
       setEditingId(null);
       resetForm();
       fetchData();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.error || err.response?.data?.message || 'Failed to save product');
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to save product');
     }
   };
 
@@ -219,14 +220,6 @@ export default function Products() {
           </button>
         </div>
       </div>
-
-      {/* Success Notification */}
-      {success && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
 
       {/* 4 Metric Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -425,13 +418,11 @@ export default function Products() {
 
                       {/* Status Badge */}
                       <td className="py-4 px-4 text-center">
-                        <button
-                          onClick={() => handleToggleStatus(p)}
-                          title="Click to toggle Active / Inactive status"
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
                             p.status !== 'INACTIVE'
-                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-slate-100 text-slate-600'
                           }`}
                         >
                           <span
@@ -440,7 +431,7 @@ export default function Products() {
                             }`}
                           />
                           <span>{p.status !== 'INACTIVE' ? 'Active' : 'Inactive'}</span>
-                        </button>
+                        </span>
                       </td>
 
                       {/* Actions */}
@@ -452,6 +443,13 @@ export default function Products() {
                             title="Edit Product"
                           >
                             <Pencil className="w-4 h-4 stroke-[2]" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(p)}
+                            className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition"
+                            title={p.status !== 'INACTIVE' ? 'Set Inactive' : 'Set Active'}
+                          >
+                            <Trash2 className="w-4 h-4 stroke-[2]" />
                           </button>
                         </div>
                       </td>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import { ALL_PERMISSIONS } from '../context/AuthContext';
+import { toast } from '../context/ToastContext';
 import {
   ShieldCheck,
   Shield,
@@ -53,7 +54,6 @@ export default function RolesPermissions() {
   const [userPerms, setUserPerms] = useState([]);
   const [activeTab, setActiveTab] = useState('permissions'); // 'permissions' | 'details' | 'users'
   const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState('');
 
   // Add Role Modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -122,11 +122,10 @@ export default function RolesPermissions() {
       await api.put(`/users/${selectedUser.id}/permissions`, {
         permissions: userPerms.join(','),
       });
-      setNotification(`Permissions updated for ${selectedUser.username}`);
+      toast.success(`Permissions updated for ${selectedUser.username}`);
       load();
-      setTimeout(() => setNotification(''), 3000);
     } catch (err) {
-      alert('Failed to save permissions');
+      toast.error('Failed to save permissions');
     } finally {
       setSaving(false);
     }
@@ -135,7 +134,7 @@ export default function RolesPermissions() {
   const handleCreateRoleUser = async (e) => {
     e.preventDefault();
     if (!newRoleForm.username.trim() || !newRoleForm.password.trim()) {
-      alert('Please enter username and password');
+      toast.error('Please enter username and password');
       return;
     }
     try {
@@ -152,11 +151,10 @@ export default function RolesPermissions() {
         role: 'STAFF',
         permissions: ['dashboard', 'billing'],
       });
-      setNotification('Role account created successfully!');
+      toast.success('Role account created successfully!');
       load();
-      setTimeout(() => setNotification(''), 3000);
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to create role');
+      toast.error(err.response?.data?.error || 'Failed to create role');
     }
   };
 
@@ -168,14 +166,6 @@ export default function RolesPermissions() {
 
   return (
     <div className="space-y-4">
-      {/* Toast Notification */}
-      {notification && (
-        <div className="fixed top-5 right-5 z-50 flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-indigo-600 text-white text-xs font-bold shadow-xl shadow-indigo-500/25 animate-bounce">
-          <Check className="w-4 h-4" />
-          {notification}
-        </div>
-      )}
-
       {/* Main Dual-Panel Workspace matching Reference Image */}
       <div className="flex flex-col lg:flex-row gap-5 items-start">
         {/* ──────── Left Panel: Roles List ──────── */}

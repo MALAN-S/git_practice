@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import FormSelect from '../components/FormSelect';
+import { toast } from '../context/ToastContext';
 import {
   Printer,
   Plus,
@@ -16,7 +17,8 @@ import {
   IndianRupee,
   Tag,
   Check,
-  Copy
+  Copy,
+  Trash2
 } from 'lucide-react';
 
 export default function Services() {
@@ -25,7 +27,6 @@ export default function Services() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all_rates'); // 'all_rates', 'single', 'double', 'services'
-  const [success, setSuccess] = useState(null);
 
   // Modals & Editing states
   const [showSvcModal, setShowSvcModal] = useState(false);
@@ -85,18 +86,17 @@ export default function Services() {
     try {
       if (editingSvcId) {
         await api.put(`/services/${editingSvcId}`, svcForm);
-        setSuccess(`Service '${svcForm.name}' updated successfully`);
+        toast.success(`Service '${svcForm.name}' updated successfully`);
       } else {
         await api.post('/services', svcForm);
-        setSuccess(`Service '${svcForm.name}' created successfully`);
+        toast.success(`Service '${svcForm.name}' created successfully`);
       }
       setSvcForm({ name: '', description: '', status: 'ACTIVE' });
       setEditingSvcId(null);
       setShowSvcModal(false);
       load();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save service');
+      toast.error(err.response?.data?.message || 'Failed to save service');
     }
     setSubmitting(false);
   };
@@ -109,11 +109,14 @@ export default function Services() {
         description: s.description,
         status: newStatus
       });
-      setSuccess(`Service '${s.name}' status changed to ${newStatus}`);
+      if (newStatus === 'INACTIVE') {
+        toast.info(`Service '${s.name}' set to Inactive`);
+      } else {
+        toast.info(`Service '${s.name}' set to Active`);
+      }
       load();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update service status');
+      toast.error(err.response?.data?.message || 'Failed to update service status');
     }
   };
 
@@ -156,18 +159,17 @@ export default function Services() {
 
       if (editingRateId) {
         await api.put(`/service-rates/${editingRateId}`, payload);
-        setSuccess('Price rate updated successfully');
+        toast.success('Price rate updated successfully');
       } else {
         await api.post('/service-rates', payload);
-        setSuccess('Price rate added successfully');
+        toast.success('Price rate added successfully');
       }
       setRateForm({ serviceId: '', paperSize: 'A4', sides: 'SINGLE', pricePerPage: '', active: true });
       setEditingRateId(null);
       setShowRateModal(false);
       load();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save rate');
+      toast.error(err.response?.data?.message || 'Failed to save rate');
     }
     setSubmitting(false);
   };
@@ -181,11 +183,14 @@ export default function Services() {
         pricePerPage: Number(r.pricePerPage),
         active: !r.active
       });
-      setSuccess(`Rate for ${r.serviceName} (${r.paperSize}) set to ${!r.active ? 'Active' : 'Inactive'}`);
+      if (!r.active) {
+        toast.info(`Rate for ${r.serviceName} (${r.paperSize}) set to Active`);
+      } else {
+        toast.info(`Rate for ${r.serviceName} (${r.paperSize}) set to Inactive`);
+      }
       load();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to toggle status');
+      toast.error(err.response?.data?.message || 'Failed to toggle status');
     }
   };
 
@@ -247,14 +252,6 @@ export default function Services() {
           </button>
         </div>
       </div>
-
-      {/* Success Notification */}
-      {success && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
 
       {/* 4 Metric Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -417,13 +414,11 @@ export default function Services() {
                           {svcRatesCount} {svcRatesCount === 1 ? 'rate' : 'rates'}
                         </td>
                         <td className="py-4 px-6 text-center">
-                          <button
-                            onClick={() => handleToggleServiceStatus(svc)}
-                            title="Click to toggle status"
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
                               svc.status === 'ACTIVE'
-                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'bg-slate-100 text-slate-600'
                             }`}
                           >
                             <span
@@ -432,7 +427,7 @@ export default function Services() {
                               }`}
                             />
                             <span>{svc.status === 'ACTIVE' ? 'Active' : 'Inactive'}</span>
-                          </button>
+                          </span>
                         </td>
                         <td className="py-4 px-6 text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -442,6 +437,13 @@ export default function Services() {
                               title="Edit Service"
                             >
                               <Pencil className="w-4 h-4 stroke-[2]" />
+                            </button>
+                            <button
+                              onClick={() => handleToggleServiceStatus(svc)}
+                              className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition"
+                              title={svc.status === 'ACTIVE' ? 'Set Inactive' : 'Set Active'}
+                            >
+                              <Trash2 className="w-4 h-4 stroke-[2]" />
                             </button>
                           </div>
                         </td>
@@ -515,13 +517,11 @@ export default function Services() {
 
                       {/* Status */}
                       <td className="py-4 px-6 text-center">
-                        <button
-                          onClick={() => handleToggleRateActive(r)}
-                          title="Click to toggle Active / Inactive status"
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
                             r.active
-                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-slate-100 text-slate-600'
                           }`}
                         >
                           <span
@@ -530,7 +530,7 @@ export default function Services() {
                             }`}
                           />
                           <span>{r.active ? 'Active' : 'Inactive'}</span>
-                        </button>
+                        </span>
                       </td>
 
                       {/* Actions */}
@@ -542,6 +542,13 @@ export default function Services() {
                             title="Edit Rate"
                           >
                             <Pencil className="w-4 h-4 stroke-[2]" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleRateActive(r)}
+                            className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 flex items-center justify-center transition"
+                            title={r.active ? 'Set Inactive' : 'Set Active'}
+                          >
+                            <Trash2 className="w-4 h-4 stroke-[2]" />
                           </button>
                         </div>
                       </td>

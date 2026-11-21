@@ -117,3 +117,105 @@ a,
     display: block !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   HIGH-PERFORMANCE GPU-ACCELERATED TOAST ANIMATIONS (120fps)
+   ───────────────────────────────────────────────────────────── */
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(115%, 0, 0);
+  }
+  70% {
+    opacity: 1;
+    transform: translate3d(-4px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(115%, 0, 0);
+  }
+}
+
+@keyframes toastScaleX {
+  0% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0);
+  }
+}
+
+/* Individual Toast Item Entry & Exit */
+.toast-item-enter {
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.toast-item-exit {
+  animation: toastSlideOut 0.24s cubic-bezier(0.2, 0, 0.8, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Row height collapse with zero reflow lag & clean stagger */
+.toast-row-wrapper {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.20s cubic-bezier(0.16, 1, 0.3, 1) 0.14s, margin-bottom 0.20s cubic-bezier(0.16, 1, 0.3, 1) 0.14s;
+  margin-bottom: 12px;
+}
+
+.toast-row-wrapper.is-leaving {
+  grid-template-rows: 0fr;
+  margin-bottom: 0px;
+}
+
+.toast-row-content {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3D RETRO-POP TOAST CARDS (IMAGE 1 FAITHFUL SPEC)
+   ───────────────────────────────────────────────────────────── */
+.toast-card-blue {
+  background-color: #cce2fe;
+  border: 1.5px solid #2563eb;
+  box-shadow: -6px 4px 0px 0px #0066ff;
+  color: #1e3a8a;
+}
+
+.toast-card-error {
+  background-color: #ffe4e6;
+  border: 1.5px solid #e11d48;
+  box-shadow: -6px 4px 0px 0px #e11d48;
+  color: #881337;
+}
+
+/* 100% GPU-composited Progress Bar */
+.toast-timer-bar {
+  transform-origin: left;
+  transform: scaleX(1);
+  will-change: transform;
+  animation: toastScaleX 3.8s linear forwards;
+}
+
+.toast-timer-paused {
+  animation-play-state: paused !important;
+}

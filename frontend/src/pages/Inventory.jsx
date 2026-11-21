@@ -4,6 +4,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import SearchableFilterDropdown from '../components/SearchableFilterDropdown';
 import FormSelect from '../components/FormSelect';
+import { toast } from '../context/ToastContext';
 import {
   Boxes, Plus, AlertTriangle, ArrowDown, ArrowUp, RefreshCw, X, History, UploadCloud,
   Box, Layers, ArrowUpDown, FileText, ChevronDown, Check, Search, Filter
@@ -42,6 +43,7 @@ export default function Inventory() {
         quantity: Number(form.quantity),
         reference: form.reference
       });
+      toast.success('Inventory stock updated successfully');
       setShowModal(false);
       setForm({ productId: '', type: 'IN', quantity: '', reference: '' });
       load();
@@ -49,7 +51,7 @@ export default function Inventory() {
         loadTransactions(selectedProduct);
       }
     } catch (err) {
-      alert(err.response?.data?.error || 'Operation failed');
+      toast.error(err.response?.data?.error || 'Operation failed');
     }
   };
 
@@ -129,6 +131,7 @@ export default function Inventory() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
                   <tr>
+                    <th className="py-3 px-4 w-16 text-center">S.NO</th>
                     <th className="py-3 px-4">Item</th>
                     <th className="py-3 px-4">SKU</th>
                     <th className="py-3 px-4">Stock</th>
@@ -151,12 +154,13 @@ export default function Inventory() {
                       }
                       return true;
                     })
-                    .map((p) => (
+                    .map((p, idx) => (
                   <tr
                     key={p.id}
                     onClick={() => loadTransactions(p)}
                     className={`cursor-pointer transition ${selectedProduct?.id === p.id ? 'bg-indigo-50/40' : 'hover:bg-slate-50/50'}`}
                   >
+                    <td className="py-3.5 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
                     <td className="py-3.5 px-4 font-bold text-slate-800">{p.name}</td>
                     <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400">{p.sku}</td>
                     <td className="py-3.5 px-4">
