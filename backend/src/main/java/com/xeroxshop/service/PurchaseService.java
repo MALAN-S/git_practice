@@ -86,6 +86,7 @@ public class PurchaseService {
                 item.setQuantity(itemReq.quantity());
                 item.setUnitPrice(itemReq.unitPrice() != null ? itemReq.unitPrice() : BigDecimal.ZERO);
                 item.setMrp(itemReq.mrp());
+                item.setSku(itemReq.sku() != null && !itemReq.sku().isBlank() ? itemReq.sku().trim() : null);
                 BigDecimal lineTotal = item.getUnitPrice().multiply(BigDecimal.valueOf(itemReq.quantity()));
                 item.setTotalPrice(lineTotal);
                 totalAmount = totalAmount.add(lineTotal);
@@ -97,6 +98,9 @@ public class PurchaseService {
                         item.setProduct(product);
                         if (item.getItemName() == null || item.getItemName().isBlank()) {
                             item.setItemName(product.getName());
+                        }
+                        if (item.getSku() == null || item.getSku().isBlank()) {
+                            item.setSku(product.getSku());
                         }
                         product.setCurrentStock(product.getCurrentStock() + itemReq.quantity());
                         // Update product purchase price and selling price (MRP)
@@ -118,6 +122,9 @@ public class PurchaseService {
 
                     if (matchedProduct != null) {
                         item.setProduct(matchedProduct);
+                        if (item.getSku() == null || item.getSku().isBlank()) {
+                            item.setSku(matchedProduct.getSku());
+                        }
                         matchedProduct.setCurrentStock(matchedProduct.getCurrentStock() + itemReq.quantity());
                         if (itemReq.unitPrice() != null && itemReq.unitPrice().compareTo(BigDecimal.ZERO) > 0) {
                             matchedProduct.setPurchasePrice(itemReq.unitPrice());
@@ -128,15 +135,19 @@ public class PurchaseService {
                         productRepository.save(matchedProduct);
                     } else {
                         Product newProduct = new Product();
-                        String sku = itemNameTrimmed.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
-                        if (sku.length() > 10) sku = sku.substring(0, 10);
+                        String sku = itemReq.sku() != null && !itemReq.sku().isBlank()
+                                ? itemReq.sku().trim().replaceAll("[^a-zA-Z0-9_-]", "").toUpperCase()
+                                : itemNameTrimmed.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+                        if (sku.length() > 30) sku = sku.substring(0, 30);
+                        if (sku.isBlank()) sku = "PROD";
                         String baseSku = sku;
                         int suffix = 1;
                         while (productRepository.existsBySku(sku)) {
-                            sku = baseSku + suffix;
+                            sku = baseSku + "-" + suffix;
                             suffix++;
                         }
                         newProduct.setSku(sku);
+                        item.setSku(sku);
                         newProduct.setName(itemNameTrimmed);
                         newProduct.setDescription("Auto-created from purchase");
                         newProduct.setPurchasePrice(itemReq.unitPrice() != null ? itemReq.unitPrice() : BigDecimal.ZERO);

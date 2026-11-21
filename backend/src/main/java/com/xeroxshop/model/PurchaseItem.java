@@ -28,6 +28,9 @@ public class PurchaseItem {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    @Column(name = "sku", length = 50)
+    private String sku;
+
     @Column(name = "item_name", length = 100)
     private String itemName;
 

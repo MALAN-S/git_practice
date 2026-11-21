@@ -13,7 +13,7 @@ const emptyForm = {
   supplierId: '',
   purchaseDate: new Date().toISOString().split('T')[0],
   invoiceNumber: '',
-  items: [{ productId: '', itemName: '', quantity: 1, unitPrice: '', mrp: '' }],
+  items: [{ productId: '', sku: '', itemName: '', quantity: 1, unitPrice: '', mrp: '' }],
   discount: '0',
   paymentMethod: 'CASH',
   paymentStatus: 'PAID',
@@ -97,7 +97,7 @@ export default function Purchases() {
   const addItem = () => {
     setForm(prev => ({
       ...prev,
-      items: [...prev.items, { productId: '', itemName: '', quantity: 1, unitPrice: '', mrp: '' }]
+      items: [...prev.items, { productId: '', sku: '', itemName: '', quantity: 1, unitPrice: '', mrp: '' }]
     }));
   };
 
@@ -117,6 +117,7 @@ export default function Purchases() {
         const prod = products.find(p => p.id === value);
         if (prod) {
           items[i].itemName = prod.name;
+          items[i].sku = prod.sku || '';
           if (prod.purchasePrice) {
             items[i].unitPrice = prod.purchasePrice;
           }
@@ -180,6 +181,7 @@ export default function Purchases() {
         notes: form.notes || null,
         items: form.items.map(it => ({
           productId: it.productId || null,
+          sku: it.sku ? it.sku.trim() : null,
           itemName: it.itemName,
           quantity: Number(it.quantity) || 1,
           unitPrice: Number(it.unitPrice) || 0,
@@ -581,54 +583,64 @@ export default function Purchases() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50/50 text-slate-500 font-bold uppercase border-b border-slate-100">
                   <tr>
-                    <th className="py-3 px-4 w-10 text-center">#</th>
-                    <th className="py-3 px-4 min-w-[200px]">Link Inventory Product (Optional)</th>
-                    <th className="py-3 px-4 min-w-[200px]">Description / Item Name *</th>
-                    <th className="py-3 px-4 w-20 text-center">Qty</th>
-                    <th className="py-3 px-4 w-32 text-right">Purchase Price (₹)</th>
-                    <th className="py-3 px-4 w-28 text-right">MRP (₹)</th>
-                    <th className="py-3 px-4 w-32 text-right">Line Total</th>
-                    <th className="py-3 px-4 w-20 text-center">Actions</th>
+                    <th className="py-3 px-3 w-10 text-center">#</th>
+                    <th className="py-3 px-3 w-40">Link Product</th>
+                    <th className="py-3 px-3 w-32">SKU</th>
+                    <th className="py-3 px-3 min-w-[180px]">Description / Item Name *</th>
+                    <th className="py-3 px-3 w-16 text-center">Qty</th>
+                    <th className="py-3 px-3 w-28 text-right">Purchase Price (₹)</th>
+                    <th className="py-3 px-3 w-24 text-right">MRP (₹)</th>
+                    <th className="py-3 px-3 w-28 text-right">Line Total</th>
+                    <th className="py-3 px-3 w-16 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {form.items.map((it, i) => (
                     <tr key={i} className="hover:bg-slate-50/40 transition">
-                      <td className="py-3 px-4 text-center text-slate-400 font-bold">{i + 1}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3 text-center text-slate-400 font-bold">{i + 1}</td>
+                      <td className="py-3 px-3">
                         <select
                           value={it.productId}
                           onChange={e => updateItem(i, 'productId', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 truncate"
+                          className="w-full max-w-[155px] px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 truncate"
+                          title={products.find(p => p.id === it.productId)?.name || 'Custom item'}
                         >
-                          <option value="">-- Custom / Non-stock Item --</option>
+                          <option value="">-- Custom --</option>
                           {products.map(p => (
                             <option key={p.id} value={p.id}>
-                              {p.name} (In stock: {p.currentStock})
+                              {p.name} ({p.currentStock})
                             </option>
                           ))}
                         </select>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
+                        <input
+                          value={it.sku || ''}
+                          onChange={e => updateItem(i, 'sku', e.target.value)}
+                          placeholder="e.g. SKU"
+                          className="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </td>
+                      <td className="py-3 px-3">
                         <input
                           required
                           value={it.itemName}
                           onChange={e => updateItem(i, 'itemName', e.target.value)}
-                          placeholder="e.g. JK Copier A4 75GSM (10 Rims)"
+                          placeholder="e.g. JK Copier A4 75GSM"
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <input
                           type="number"
                           min="1"
                           required
                           value={it.quantity}
                           onChange={e => updateItem(i, 'quantity', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-center text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-center text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <input
                           type="number"
                           step="1"
@@ -637,10 +649,10 @@ export default function Purchases() {
                           value={it.unitPrice}
                           onChange={e => updateItem(i, 'unitPrice', e.target.value)}
                           placeholder="0"
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <input
                           type="number"
                           step="1"
@@ -654,13 +666,13 @@ export default function Purchases() {
                             }
                           }}
                           placeholder="0"
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-4 text-right font-black text-slate-900 text-sm">
+                      <td className="py-3 px-3 text-right font-black text-slate-900 text-sm">
                         ₹{Math.round((Number(it.unitPrice) || 0) * (Number(it.quantity) || 0))}
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
@@ -921,7 +933,7 @@ export default function Purchases() {
                 <table className="w-full text-xs">
                   <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase border-b border-slate-100">
                     <tr>
-                      <th className="py-2.5 px-3 text-left">Item Name</th>
+                      <th className="py-2.5 px-3 text-left">Item Details</th>
                       <th className="py-2.5 px-3 text-center">Qty</th>
                       <th className="py-2.5 px-3 text-right">Purchase Price</th>
                       <th className="py-2.5 px-3 text-right">MRP</th>
@@ -931,7 +943,12 @@ export default function Purchases() {
                   <tbody className="divide-y divide-slate-100">
                     {(viewPurchase.items || []).map((it, i) => (
                       <tr key={i}>
-                        <td className="py-2.5 px-3 font-semibold text-slate-800">{it.itemName || it.product?.name || '—'}</td>
+                        <td className="py-2.5 px-3 font-semibold text-slate-800">
+                          <div>{it.itemName || it.product?.name || '—'}</div>
+                          {(it.sku || it.product?.sku) && (
+                            <div className="text-[10px] text-slate-400 font-mono font-medium">SKU: {it.sku || it.product?.sku}</div>
+                          )}
+                        </td>
                         <td className="py-2.5 px-3 text-center text-slate-600 font-bold">{it.quantity}</td>
                         <td className="py-2.5 px-3 text-right text-slate-600">₹{Math.round(Number(it.unitPrice))}</td>
                         <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">₹{Math.round(Number(it.mrp || 0))}</td>

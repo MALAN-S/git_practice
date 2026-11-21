@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public record PurchaseItemRequest(
     UUID productId,
+    String sku,
     String itemName,
     int quantity,
     BigDecimal unitPrice,
