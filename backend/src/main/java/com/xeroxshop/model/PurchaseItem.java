@@ -37,6 +37,9 @@ public class PurchaseItem {
     @Column(name = "unit_price", nullable = false, precision = 15, scale = 2)
     private BigDecimal unitPrice;
 
+    @Column(name = "mrp", precision = 15, scale = 2)
+    private BigDecimal mrp;
+
     @Column(name = "total_price", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalPrice;
 }

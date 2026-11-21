@@ -85,11 +85,12 @@ public class PurchaseService {
                 item.setItemName(itemReq.itemName());
                 item.setQuantity(itemReq.quantity());
                 item.setUnitPrice(itemReq.unitPrice() != null ? itemReq.unitPrice() : BigDecimal.ZERO);
+                item.setMrp(itemReq.mrp());
                 BigDecimal lineTotal = item.getUnitPrice().multiply(BigDecimal.valueOf(itemReq.quantity()));
                 item.setTotalPrice(lineTotal);
                 totalAmount = totalAmount.add(lineTotal);
 
-                // Link product and update stock if productId provided
+                // Link product and update stock + prices if productId provided
                 if (itemReq.productId() != null) {
                     Product product = productRepository.findById(itemReq.productId()).orElse(null);
                     if (product != null) {
@@ -98,6 +99,13 @@ public class PurchaseService {
                             item.setItemName(product.getName());
                         }
                         product.setCurrentStock(product.getCurrentStock() + itemReq.quantity());
+                        // Update product purchase price and selling price (MRP)
+                        if (itemReq.unitPrice() != null && itemReq.unitPrice().compareTo(BigDecimal.ZERO) > 0) {
+                            product.setPurchasePrice(itemReq.unitPrice());
+                        }
+                        if (itemReq.mrp() != null && itemReq.mrp().compareTo(BigDecimal.ZERO) > 0) {
+                            product.setSellingPrice(itemReq.mrp());
+                        }
                         productRepository.save(product);
                     }
                 } else if (itemReq.itemName() != null && !itemReq.itemName().isBlank()) {
@@ -111,6 +119,12 @@ public class PurchaseService {
                     if (matchedProduct != null) {
                         item.setProduct(matchedProduct);
                         matchedProduct.setCurrentStock(matchedProduct.getCurrentStock() + itemReq.quantity());
+                        if (itemReq.unitPrice() != null && itemReq.unitPrice().compareTo(BigDecimal.ZERO) > 0) {
+                            matchedProduct.setPurchasePrice(itemReq.unitPrice());
+                        }
+                        if (itemReq.mrp() != null && itemReq.mrp().compareTo(BigDecimal.ZERO) > 0) {
+                            matchedProduct.setSellingPrice(itemReq.mrp());
+                        }
                         productRepository.save(matchedProduct);
                     } else {
                         Product newProduct = new Product();
@@ -126,7 +140,10 @@ public class PurchaseService {
                         newProduct.setName(itemNameTrimmed);
                         newProduct.setDescription("Auto-created from purchase");
                         newProduct.setPurchasePrice(itemReq.unitPrice() != null ? itemReq.unitPrice() : BigDecimal.ZERO);
-                        newProduct.setSellingPrice(itemReq.unitPrice() != null ? itemReq.unitPrice() : BigDecimal.ZERO);
+                        BigDecimal selling = (itemReq.mrp() != null && itemReq.mrp().compareTo(BigDecimal.ZERO) > 0)
+                                ? itemReq.mrp()
+                                : (itemReq.unitPrice() != null ? itemReq.unitPrice() : BigDecimal.ZERO);
+                        newProduct.setSellingPrice(selling);
                         newProduct.setCurrentStock(itemReq.quantity());
                         newProduct.setMinStockLevel(5);
                         newProduct.setStatus("ACTIVE");

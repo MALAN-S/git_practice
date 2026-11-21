@@ -13,7 +13,7 @@ const emptyForm = {
   supplierId: '',
   purchaseDate: new Date().toISOString().split('T')[0],
   invoiceNumber: '',
-  items: [{ productId: '', itemName: '', quantity: 1, unitPrice: '' }],
+  items: [{ productId: '', itemName: '', quantity: 1, unitPrice: '', mrp: '' }],
   discount: '0',
   paymentMethod: 'CASH',
   paymentStatus: 'PAID',
@@ -97,7 +97,7 @@ export default function Purchases() {
   const addItem = () => {
     setForm(prev => ({
       ...prev,
-      items: [...prev.items, { productId: '', itemName: '', quantity: 1, unitPrice: '' }]
+      items: [...prev.items, { productId: '', itemName: '', quantity: 1, unitPrice: '', mrp: '' }]
     }));
   };
 
@@ -119,6 +119,9 @@ export default function Purchases() {
           items[i].itemName = prod.name;
           if (prod.purchasePrice) {
             items[i].unitPrice = prod.purchasePrice;
+          }
+          if (prod.sellingPrice) {
+            items[i].mrp = prod.sellingPrice;
           }
         }
       }
@@ -179,7 +182,8 @@ export default function Purchases() {
           productId: it.productId || null,
           itemName: it.itemName,
           quantity: Number(it.quantity) || 1,
-          unitPrice: Number(it.unitPrice) || 0
+          unitPrice: Number(it.unitPrice) || 0,
+          mrp: it.mrp !== '' && it.mrp != null ? Number(it.mrp) : null
         }))
       };
       await api.post('/purchases', payload);
@@ -580,8 +584,9 @@ export default function Purchases() {
                     <th className="py-3 px-4 w-10 text-center">#</th>
                     <th className="py-3 px-4 min-w-[200px]">Link Inventory Product (Optional)</th>
                     <th className="py-3 px-4 min-w-[200px]">Description / Item Name *</th>
-                    <th className="py-3 px-4 w-28 text-center">Qty</th>
-                    <th className="py-3 px-4 w-32 text-right">Unit Rate (₹)</th>
+                    <th className="py-3 px-4 w-20 text-center">Qty</th>
+                    <th className="py-3 px-4 w-32 text-right">Purchase Price (₹)</th>
+                    <th className="py-3 px-4 w-28 text-right">MRP (₹)</th>
                     <th className="py-3 px-4 w-32 text-right">Line Total</th>
                     <th className="py-3 px-4 w-12 text-center"></th>
                   </tr>
@@ -631,6 +636,17 @@ export default function Purchases() {
                           required
                           value={it.unitPrice}
                           onChange={e => updateItem(i, 'unitPrice', e.target.value)}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </td>
+                      <td className="py-3 px-4">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={it.mrp}
+                          onChange={e => updateItem(i, 'mrp', e.target.value)}
                           placeholder="0.00"
                           className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
@@ -898,7 +914,8 @@ export default function Purchases() {
                     <tr>
                       <th className="py-2.5 px-3 text-left">Item Name</th>
                       <th className="py-2.5 px-3 text-center">Qty</th>
-                      <th className="py-2.5 px-3 text-right">Unit Rate</th>
+                      <th className="py-2.5 px-3 text-right">Purchase Price</th>
+                      <th className="py-2.5 px-3 text-right">MRP</th>
                       <th className="py-2.5 px-3 text-right">Total</th>
                     </tr>
                   </thead>
@@ -908,6 +925,7 @@ export default function Purchases() {
                         <td className="py-2.5 px-3 font-semibold text-slate-800">{it.itemName || it.product?.name || '—'}</td>
                         <td className="py-2.5 px-3 text-center text-slate-600 font-bold">{it.quantity}</td>
                         <td className="py-2.5 px-3 text-right text-slate-600">₹{Number(it.unitPrice).toFixed(2)}</td>
+                        <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">₹{Number(it.mrp || 0).toFixed(2)}</td>
                         <td className="py-2.5 px-3 text-right font-black text-slate-800">₹{Number(it.totalPrice).toFixed(2)}</td>
                       </tr>
                     ))}

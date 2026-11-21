@@ -350,7 +350,7 @@ export default function Products() {
                 <th className="py-3.5 px-4">SKU</th>
                 <th className="py-3.5 px-4">Category</th>
                 <th className="py-3.5 px-4">Purchase Price</th>
-                <th className="py-3.5 px-4">Selling Price</th>
+                <th className="py-3.5 px-4">Selling Price (MRP)</th>
                 <th className="py-3.5 px-4 text-center">Stock</th>
                 <th className="py-3.5 px-4 text-center">Status</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
@@ -566,7 +566,7 @@ export default function Products() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Selling Price (₹) <span className="text-rose-500">*</span>
+                  Selling Price / MRP (₹) <span className="text-rose-500">*</span>
                 </label>
                 <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition">
                   <IndianRupee className="w-4 h-4 text-slate-400 shrink-0" />

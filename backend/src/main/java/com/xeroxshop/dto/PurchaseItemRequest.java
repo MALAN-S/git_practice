@@ -7,5 +7,6 @@ public record PurchaseItemRequest(
     UUID productId,
     String itemName,
     int quantity,
-    BigDecimal unitPrice
+    BigDecimal unitPrice,
+    BigDecimal mrp
 ) {}
