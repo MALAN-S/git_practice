@@ -584,9 +584,9 @@ export default function Purchases() {
                 <thead className="bg-slate-50/50 text-slate-500 font-bold uppercase border-b border-slate-100">
                   <tr>
                     <th className="py-3 px-3 w-10 text-center">#</th>
-                    <th className="py-3 px-3 w-40">Link Product</th>
-                    <th className="py-3 px-3 w-32">SKU</th>
-                    <th className="py-3 px-3 min-w-[180px]">Description / Item Name *</th>
+                    <th className="py-3 px-3 w-[23%] min-w-[160px]">Link Product</th>
+                    <th className="py-3 px-3 w-[23%] min-w-[160px]">SKU</th>
+                    <th className="py-3 px-3 w-[23%] min-w-[160px]">Description / Item Name *</th>
                     <th className="py-3 px-3 w-16 text-center">Qty</th>
                     <th className="py-3 px-3 w-28 text-right">Purchase Price (₹)</th>
                     <th className="py-3 px-3 w-24 text-right">MRP (₹)</th>
@@ -602,10 +602,10 @@ export default function Purchases() {
                         <select
                           value={it.productId}
                           onChange={e => updateItem(i, 'productId', e.target.value)}
-                          className="w-full max-w-[155px] px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 truncate"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 truncate"
                           title={products.find(p => p.id === it.productId)?.name || 'Custom item'}
                         >
-                          <option value="">-- Custom --</option>
+                          <option value="">-- Custom / Non-stock --</option>
                           {products.map(p => (
                             <option key={p.id} value={p.id}>
                               {p.name} ({p.currentStock})
@@ -618,7 +618,7 @@ export default function Purchases() {
                           value={it.sku || ''}
                           onChange={e => updateItem(i, 'sku', e.target.value)}
                           placeholder="e.g. SKU"
-                          className="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
                       <td className="py-3 px-3">
