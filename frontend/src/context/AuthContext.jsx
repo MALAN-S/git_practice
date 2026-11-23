@@ -17,6 +17,7 @@ export const ALL_PERMISSIONS = [
   { key: 'categories', label: 'Categories', group: 'Settings' },
   { key: 'suppliers', label: 'Suppliers', group: 'Settings' },
   { key: 'services', label: 'Services', group: 'Settings' },
+  { key: 'customers', label: 'Customers', group: 'Settings' },
   { key: 'import', label: 'Import Items', group: 'Settings' },
 ];
 
@@ -35,6 +36,7 @@ export const ROUTE_PERMISSION_MAP = {
   '/categories': 'categories',
   '/suppliers': 'suppliers',
   '/services': 'services',
+  '/customers': 'customers',
   '/import-csv': 'import',
   '/products/import': 'import',
   '/settings': 'settings',

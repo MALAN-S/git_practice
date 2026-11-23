@@ -46,6 +46,7 @@ const settingsSubLinks = [
   { id: 'categories', to: '/categories', label: 'Categories', icon: Tag, perm: 'categories' },
   { id: 'suppliers', to: '/suppliers', label: 'Suppliers', icon: Truck, perm: 'suppliers' },
   { id: 'services', to: '/services', label: 'Services', icon: Wrench, perm: 'services' },
+  { id: 'customers', to: '/customers', label: 'Customers', icon: Users, perm: 'customers' },
   { id: 'import', to: '/import-csv', label: 'Import Items', icon: UploadCloud, perm: 'import' },
 ];
 
@@ -68,7 +69,7 @@ export default function Sidebar() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Settings accordion open/close
-  const isMasterRoute = ['/products', '/categories', '/suppliers', '/services', '/import-csv', '/products/import', '/users', '/roles'].includes(location.pathname);
+  const isMasterRoute = ['/products', '/categories', '/suppliers', '/services', '/customers', '/import-csv', '/products/import', '/users', '/roles'].includes(location.pathname);
   const isSettingsActive = location.pathname === '/settings';
   const [settingsOpen, setSettingsOpen] = useState(isSettingsActive || isMasterRoute);
 
@@ -86,13 +87,15 @@ export default function Sidebar() {
       api.get('/products'),
       api.get('/categories'),
       api.get('/suppliers'),
-      api.get('/services')
-    ]).then(([p, c, supp, s]) => {
+      api.get('/services'),
+      api.get('/customers')
+    ]).then(([p, c, supp, s, cust]) => {
       setCounts({
         products: p.status === 'fulfilled' && Array.isArray(p.value.data) ? p.value.data.length : null,
         categories: c.status === 'fulfilled' && Array.isArray(c.value.data) ? c.value.data.length : null,
         suppliers: supp.status === 'fulfilled' && Array.isArray(supp.value.data) ? supp.value.data.length : null,
         services: s.status === 'fulfilled' && Array.isArray(s.value.data) ? s.value.data.length : null,
+        customers: cust.status === 'fulfilled' && Array.isArray(cust.value.data) ? cust.value.data.length : null,
       });
     }).catch(() => {});
   }, []);

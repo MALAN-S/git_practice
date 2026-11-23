@@ -30,12 +30,15 @@ import {
   Settings as SettingsIcon,
   X,
   Lock,
-  UserPlus
+  UserPlus,
+  ShoppingBag,
+  Truck
 } from 'lucide-react';
 
 const permIconMap = {
   dashboard: Home,
   billing: Receipt,
+  purchases: ShoppingBag,
   inventory: Boxes,
   reports: BarChart3,
   expenses: CreditCard,
@@ -44,7 +47,9 @@ const permIconMap = {
   roles: ShieldCheck,
   products: Package,
   categories: Tag,
+  suppliers: Truck,
   services: Wrench,
+  customers: UsersIcon,
   import: UploadCloud,
 };
 

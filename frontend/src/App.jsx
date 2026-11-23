@@ -20,6 +20,7 @@ import Settings from './pages/Settings';
 import Categories from './pages/Categories';
 import Purchases from './pages/Purchases';
 import Suppliers from './pages/Suppliers';
+import Customers from './pages/Customers';
 
 /* ── Protected route wrapper with permission check ── */
 function ProtectedRoute({ children, permKey, fallback = '/dashboard' }) {
@@ -78,6 +79,7 @@ function AppLayout() {
           <Route path="/roles" element={<ProtectedRoute permKey="roles" fallback={defaultPage}><RolesPermissions /></ProtectedRoute>} />
           <Route path="/categories" element={<ProtectedRoute permKey="categories" fallback={defaultPage}><Categories /></ProtectedRoute>} />
           <Route path="/suppliers" element={<ProtectedRoute permKey="suppliers" fallback={defaultPage}><Suppliers /></ProtectedRoute>} />
+          <Route path="/customers" element={<ProtectedRoute permKey="customers" fallback={defaultPage}><Customers /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute fallback={defaultPage}><Settings /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to={defaultPage} replace />} />
         </Routes>
