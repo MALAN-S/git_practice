@@ -158,7 +158,7 @@ export default function BillHistory() {
                 <col className="w-[12%]" />
                 <col className="w-[16%]" />
               </colgroup>
-              <thead className="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+              <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80">
                 <tr>
                   <th className="py-3 px-2 text-center">S.NO</th>
                   <th className="py-3 px-4 text-left">Bill Number</th>

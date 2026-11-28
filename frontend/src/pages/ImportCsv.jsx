@@ -858,7 +858,7 @@ export default function ImportCsv() {
               <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto max-h-72">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100 sticky top-0">
+                    <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80 sticky top-0">
                       <tr>
                         <th className="py-2.5 px-3">S.NO</th>
                         {previewHeaders.map((h, i) => (

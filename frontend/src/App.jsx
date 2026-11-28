@@ -80,7 +80,7 @@ function AppLayout() {
           <Route path="/categories" element={<ProtectedRoute permKey="categories" fallback={defaultPage}><Categories /></ProtectedRoute>} />
           <Route path="/suppliers" element={<ProtectedRoute permKey="suppliers" fallback={defaultPage}><Suppliers /></ProtectedRoute>} />
           <Route path="/customers" element={<ProtectedRoute permKey="customers" fallback={defaultPage}><Customers /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute fallback={defaultPage}><Settings /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute permKey="settings" fallback={defaultPage}><Settings /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to={defaultPage} replace />} />
         </Routes>
       </main>

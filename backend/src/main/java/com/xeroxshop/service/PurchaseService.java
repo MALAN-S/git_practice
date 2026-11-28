@@ -2,6 +2,7 @@ package com.xeroxshop.service;
 
 import com.xeroxshop.dto.PurchaseItemRequest;
 import com.xeroxshop.dto.PurchaseRequest;
+import com.xeroxshop.model.Category;
 import com.xeroxshop.model.Product;
 import com.xeroxshop.model.Purchase;
 import com.xeroxshop.model.PurchaseItem;
@@ -91,29 +92,20 @@ public class PurchaseService {
                 item.setTotalPrice(lineTotal);
                 totalAmount = totalAmount.add(lineTotal);
 
+                Category selectedCategory = itemReq.categoryId() != null
+                        ? categoryRepository.findById(itemReq.categoryId()).orElse(null)
+                        : null;
+
                 // Link product and update stock + prices if productId provided
                 if (itemReq.productId() != null) {
                     Product product = productRepository.findById(itemReq.productId()).orElse(null);
                     if (product != null) {
-                        item.setProduct(product);
-                        if (item.getItemName() == null || item.getItemName().isBlank()) {
-                            item.setItemName(product.getName());
-                        }
-                        if (item.getSku() == null || item.getSku().isBlank()) {
-                            item.setSku(product.getSku());
-                        }
-                        product.setCurrentStock(product.getCurrentStock() + itemReq.quantity());
-                        // Update product purchase price and selling price (MRP)
-                        if (itemReq.unitPrice() != null && itemReq.unitPrice().compareTo(BigDecimal.ZERO) > 0) {
-                            product.setPurchasePrice(itemReq.unitPrice());
-                        }
-                        if (itemReq.mrp() != null && itemReq.mrp().compareTo(BigDecimal.ZERO) > 0) {
-                            product.setSellingPrice(itemReq.mrp());
-                        }
-                        productRepository.save(product);
+                        syncExistingProduct(product, item, itemReq, selectedCategory);
+                    } else if (selectedCategory != null) {
+                        item.setCategory(selectedCategory);
                     }
                 } else if (itemReq.itemName() != null && !itemReq.itemName().isBlank()) {
-                    // Auto-create a new product in inventory for custom items
+                    // Match existing inventory product by name, or auto-create a new product for custom items
                     String itemNameTrimmed = itemReq.itemName().trim();
                     List<Product> existing = productRepository.findByNameContainingIgnoreCase(itemNameTrimmed);
                     Product matchedProduct = existing.stream()
@@ -121,18 +113,7 @@ public class PurchaseService {
                             .findFirst().orElse(null);
 
                     if (matchedProduct != null) {
-                        item.setProduct(matchedProduct);
-                        if (item.getSku() == null || item.getSku().isBlank()) {
-                            item.setSku(matchedProduct.getSku());
-                        }
-                        matchedProduct.setCurrentStock(matchedProduct.getCurrentStock() + itemReq.quantity());
-                        if (itemReq.unitPrice() != null && itemReq.unitPrice().compareTo(BigDecimal.ZERO) > 0) {
-                            matchedProduct.setPurchasePrice(itemReq.unitPrice());
-                        }
-                        if (itemReq.mrp() != null && itemReq.mrp().compareTo(BigDecimal.ZERO) > 0) {
-                            matchedProduct.setSellingPrice(itemReq.mrp());
-                        }
-                        productRepository.save(matchedProduct);
+                        syncExistingProduct(matchedProduct, item, itemReq, selectedCategory);
                     } else {
                         Product newProduct = new Product();
                         String sku = itemReq.sku() != null && !itemReq.sku().isBlank()
@@ -158,10 +139,17 @@ public class PurchaseService {
                         newProduct.setCurrentStock(itemReq.quantity());
                         newProduct.setMinStockLevel(5);
                         newProduct.setStatus("ACTIVE");
-                        categoryRepository.findByNameIgnoreCase("Stationery").ifPresent(newProduct::setCategory);
+                        if (selectedCategory != null) {
+                            newProduct.setCategory(selectedCategory);
+                        } else {
+                            categoryRepository.findByNameIgnoreCase("Stationery").ifPresent(newProduct::setCategory);
+                        }
                         newProduct = productRepository.save(newProduct);
                         item.setProduct(newProduct);
+                        item.setCategory(newProduct.getCategory());
                     }
+                } else if (selectedCategory != null) {
+                    item.setCategory(selectedCategory);
                 }
 
                 items.add(item);
@@ -240,6 +228,30 @@ public class PurchaseService {
         purchasePaymentRepository.save(payment);
 
         return purchaseRepository.save(purchase);
+    }
+
+    private void syncExistingProduct(Product product, PurchaseItem item, PurchaseItemRequest itemReq, Category selectedCategory) {
+        item.setProduct(product);
+        if (item.getItemName() == null || item.getItemName().isBlank()) {
+            item.setItemName(product.getName());
+        }
+        if (item.getSku() == null || item.getSku().isBlank()) {
+            item.setSku(product.getSku());
+        }
+        product.setCurrentStock(product.getCurrentStock() + itemReq.quantity());
+        if (itemReq.unitPrice() != null && itemReq.unitPrice().compareTo(BigDecimal.ZERO) > 0) {
+            product.setPurchasePrice(itemReq.unitPrice());
+        }
+        if (itemReq.mrp() != null && itemReq.mrp().compareTo(BigDecimal.ZERO) > 0) {
+            product.setSellingPrice(itemReq.mrp());
+        }
+        if (selectedCategory != null) {
+            product.setCategory(selectedCategory);
+            item.setCategory(selectedCategory);
+        } else {
+            item.setCategory(product.getCategory());
+        }
+        productRepository.save(product);
     }
 
     @Transactional

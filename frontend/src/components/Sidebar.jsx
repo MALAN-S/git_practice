@@ -40,6 +40,7 @@ const mainLinks = [
 ];
 
 const settingsSubLinks = [
+  { id: 'store_settings', to: '/settings', label: 'Store Settings', icon: Sliders, perm: 'settings' },
   { id: 'users', to: '/users', label: 'User Management', icon: Users, perm: 'users' },
   { id: 'roles', to: '/roles', label: 'Roles & Permissions', icon: ShieldCheck, perm: 'roles' },
   { id: 'products', to: '/products', label: 'Products', icon: Package, perm: 'products' },
@@ -71,13 +72,12 @@ export default function Sidebar() {
   // Settings accordion open/close
   const isMasterRoute = ['/products', '/categories', '/suppliers', '/services', '/customers', '/import-csv', '/products/import', '/users', '/roles'].includes(location.pathname);
   const isSettingsActive = location.pathname === '/settings';
-  const [settingsOpen, setSettingsOpen] = useState(isSettingsActive || isMasterRoute);
+  const isSettingsSectionActive = isSettingsActive || isMasterRoute;
+  const [settingsOpen, setSettingsOpen] = useState(isSettingsSectionActive);
 
   useEffect(() => {
-    if (isSettingsActive || isMasterRoute) {
-      setSettingsOpen(true);
-    }
-  }, [location.pathname]);
+    setSettingsOpen(isSettingsSectionActive);
+  }, [isSettingsSectionActive]);
 
   // Live master data counts
   const [counts, setCounts] = useState({});
@@ -118,7 +118,6 @@ export default function Sidebar() {
   const allLinks = [
     ...visibleMainLinks,
     ...visibleSettingsSubLinks,
-    { to: '/settings', label: 'Settings', icon: Settings }
   ];
   const filteredLinks = searchQuery.trim()
     ? allLinks.filter((l) =>
@@ -126,27 +125,44 @@ export default function Sidebar() {
       )
     : visibleMainLinks;
 
+  const itemActiveClass =
+    'bg-[#e9edf5] text-slate-900 font-bold shadow-[0_2px_10px_rgba(15,23,42,0.06)] outline-none focus:outline-none';
+
+  const itemHoverClass =
+    'outline-none focus:outline-none hover:text-slate-900 hover:bg-slate-100/90 hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)] hover:scale-[1.02]';
+
+  const renderActiveBar = (compact = false) => (
+    <span
+      className={`pointer-events-none absolute ${
+        isCollapsed ? '-left-1.5' : '-left-2'
+      } top-1/2 -translate-y-1/2 w-1 ${
+        compact ? 'h-6' : 'h-7'
+      } rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.35)]`}
+    />
+  );
+
   const renderLink = (link) => {
     const Icon = link.icon;
     const isActive = location.pathname === link.to;
 
     return (
       <div key={link.to} className="relative group flex justify-center">
+        {isActive && renderActiveBar(false)}
         <NavLink
           to={link.to}
           title={isCollapsed ? link.label : undefined}
           className={`w-full flex items-center ${
             isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'
-          } rounded-2xl text-xs font-semibold transition-all duration-150 ${
+          } rounded-2xl text-xs font-semibold transition-all duration-150 ease-out origin-center ${
             isActive
-              ? 'bg-white text-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/90'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
+              ? itemActiveClass
+              : `text-slate-500 ${itemHoverClass}`
           }`}
         >
           <Icon
             className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
               isActive
-                ? 'text-slate-900 stroke-[2.4]'
+                ? 'text-slate-900 stroke-[2.3]'
                 : 'text-slate-400 group-hover:text-slate-700 stroke-[1.8]'
             }`}
           />
@@ -169,15 +185,15 @@ export default function Sidebar() {
     <aside
       className={`transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-[72px]' : 'w-64'
-      } bg-[#f8f9fa] m-3 mr-0 rounded-[32px] border border-slate-200/80 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.04)] flex flex-col justify-between p-3.5 select-none shrink-0 print:hidden no-print z-40`}
+      } bg-white m-3 mr-0 rounded-[32px] border border-slate-200/80 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.04)] flex flex-col justify-between px-2.5 py-3.5 select-none shrink-0 print:hidden no-print z-40`}
     >
       {/* Top Section */}
       <div className={`flex flex-col min-h-0 flex-1 ${isCollapsed ? 'overflow-visible' : ''}`}>
         {/* Brand Header */}
         <div
           className={`flex items-center ${
-            isCollapsed ? 'justify-center' : 'justify-between'
-          } px-2 py-2 mb-3.5`}
+            isCollapsed ? 'justify-center' : 'justify-between pl-2.5 pr-1.5'
+          } py-2 mb-3.5`}
         >
           <div className="relative group flex justify-center">
             <button
@@ -209,7 +225,7 @@ export default function Sidebar() {
             <button
               onClick={toggleCollapse}
               title="Collapse sidebar"
-              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition"
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition focus:outline-none"
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
@@ -218,20 +234,20 @@ export default function Sidebar() {
 
         {/* Search Bar (Only shown in expanded mode) */}
         {!isCollapsed && (
-          <div className="relative mb-3.5 px-1">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <div className="relative mb-3.5 px-2">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search"
-              className="w-full pl-8 pr-3 py-2 bg-slate-200/60 hover:bg-slate-200/80 focus:bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 rounded-xl border border-transparent focus:border-slate-300 focus:outline-none transition-all duration-200"
+              className="w-full pl-8 pr-3 py-2 bg-slate-100/90 hover:bg-slate-100 focus:bg-white text-xs font-medium text-slate-800 placeholder:text-slate-400 rounded-2xl border border-transparent focus:border-slate-300 focus:outline-none transition-all duration-200"
             />
           </div>
         )}
 
         {/* Navigation Items (Scrollable) */}
-        <div className={`space-y-1 pr-0.5 flex-1 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto no-scrollbar'}`}>
+        <div className={`space-y-1 flex-1 ${isCollapsed ? 'overflow-visible' : 'pl-2 pr-1 py-0.5 overflow-y-auto no-scrollbar'}`}>
           {/* Regular nav links (or filtered search results) */}
           {filteredLinks.map((link) => renderLink(link))}
 
@@ -241,18 +257,19 @@ export default function Sidebar() {
               {isCollapsed ? (
                 // Collapsed mode: just show Settings icon
                 <div className="relative group flex justify-center">
+                  {isSettingsSectionActive && renderActiveBar(false)}
                   <NavLink
                     to="/settings"
                     title={isCollapsed ? 'Settings' : undefined}
-                    className={`w-full flex items-center justify-center p-2.5 rounded-2xl text-xs font-semibold transition-all duration-150 ${
-                      isSettingsActive
-                        ? 'bg-white text-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/90'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
+                    className={`w-full flex items-center justify-center p-2.5 rounded-2xl text-xs font-semibold transition-all duration-150 ease-out origin-center ${
+                      isSettingsSectionActive
+                        ? itemActiveClass
+                        : `text-slate-500 ${itemHoverClass}`
                     }`}
                   >
                     <Settings
                       className={`w-4 h-4 shrink-0 ${
-                        isSettingsActive ? 'text-slate-900 stroke-[2.4]' : 'text-slate-400 group-hover:text-slate-700 stroke-[1.8]'
+                        isSettingsSectionActive ? 'text-slate-900 stroke-[2.3]' : 'text-slate-400 group-hover:text-slate-700 stroke-[1.8]'
                       }`}
                     />
                   </NavLink>
@@ -264,37 +281,47 @@ export default function Sidebar() {
                 </div>
               ) : (
                 // Expanded mode: Settings accordion
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1">
-                    <NavLink
-                      to="/settings"
-                      onClick={() => setSettingsOpen(true)}
-                      className={`flex-1 flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-150 ${
-                        isSettingsActive
-                          ? 'bg-white text-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/90'
-                          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
-                      }`}
-                    >
-                      <Settings
-                        className={`w-4 h-4 shrink-0 ${
-                          isSettingsActive ? 'text-slate-900 stroke-[2.4]' : 'text-slate-400 stroke-[1.8]'
-                        }`}
-                      />
-                      <span className="truncate flex-1 text-left">Settings</span>
-                    </NavLink>
-                    <button
-                      type="button"
-                      onClick={() => setSettingsOpen(!settingsOpen)}
-                      title="Toggle Master Data"
-                      className="p-2.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 rounded-2xl transition"
-                    >
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          settingsOpen ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-                  </div>
+                (() => {
+                  const isCollapsedSettingsHighlighted = isSettingsSectionActive && !settingsOpen;
+                  return (
+                    <div>
+                      <div className="relative group flex justify-center">
+                        {isCollapsedSettingsHighlighted && renderActiveBar(false)}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!isSettingsSectionActive && visibleSettingsSubLinks.length > 0) {
+                              setSettingsOpen(true);
+                              navigate(visibleSettingsSubLinks[0].to);
+                            } else {
+                              setSettingsOpen((prev) => !prev);
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-150 ease-out origin-center ${
+                            isCollapsedSettingsHighlighted
+                              ? itemActiveClass
+                              : settingsOpen
+                                ? `text-slate-800 ${itemHoverClass}`
+                                : `text-slate-500 ${itemHoverClass}`
+                          }`}
+                        >
+                          <Settings
+                            className={`w-4 h-4 shrink-0 ${
+                              isCollapsedSettingsHighlighted
+                                ? 'text-slate-900 stroke-[2.3]'
+                                : settingsOpen
+                                  ? 'text-slate-700 stroke-[2]'
+                                  : 'text-slate-400 group-hover:text-slate-700 stroke-[1.8]'
+                            }`}
+                          />
+                          <span className="truncate flex-1 text-left">Settings</span>
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                              settingsOpen ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </button>
+                      </div>
 
                   {settingsOpen && (
                     <div className="space-y-0.5 mt-0.5">
@@ -305,23 +332,24 @@ export default function Sidebar() {
                           (sub.to === '/import-csv' && location.pathname === '/products/import');
                         return (
                           <div key={sub.to} className="relative group flex justify-center">
+                            {isSubActive && renderActiveBar(true)}
                             <NavLink
                               to={sub.to}
-                              className={`w-full flex items-center gap-3 pl-9 pr-3.5 py-2 rounded-2xl text-xs font-semibold transition-all duration-150 ${
+                              className={`w-full flex items-center gap-2.5 pl-8 pr-3.5 py-1.5 rounded-2xl text-xs font-semibold transition-all duration-150 ease-out origin-center ${
                                 isSubActive
-                                  ? 'bg-white text-slate-900 shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/90'
-                                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
+                                  ? itemActiveClass
+                                  : `text-slate-500 ${itemHoverClass}`
                               }`}
                             >
                               <SubIcon
                                 className={`w-3.5 h-3.5 shrink-0 ${
-                                  isSubActive ? 'text-slate-900 stroke-[2.4]' : 'text-slate-400 group-hover:text-slate-700 stroke-[1.8]'
+                                  isSubActive ? 'text-slate-900 stroke-[2.3]' : 'text-slate-400 group-hover:text-slate-700 stroke-[1.8]'
                                 }`}
                               />
                               <span className="truncate flex-1">{sub.label}</span>
                               {counts[sub.id] != null && (
                                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                                  isSubActive ? 'bg-slate-100 text-slate-800' : 'bg-slate-200/60 text-slate-500'
+                                  isSubActive ? 'bg-white/90 text-slate-900' : 'bg-slate-200/60 text-slate-500'
                                 }`}>
                                   {counts[sub.id]}
                                 </span>
@@ -332,7 +360,9 @@ export default function Sidebar() {
                       })}
                     </div>
                   )}
-                </div>
+                    </div>
+                  );
+                })()
               )}
             </>
           )}

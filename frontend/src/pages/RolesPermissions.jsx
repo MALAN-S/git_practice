@@ -43,6 +43,7 @@ const permIconMap = {
   reports: BarChart3,
   expenses: CreditCard,
   bill_history: History,
+  settings: SettingsIcon,
   users: UsersIcon,
   roles: ShieldCheck,
   products: Package,

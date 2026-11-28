@@ -14,7 +14,7 @@ const emptyForm = {
   supplierId: '',
   purchaseDate: new Date().toISOString().split('T')[0],
   invoiceNumber: '',
-  items: [{ productId: '', sku: '', itemName: '', quantity: 1, unitPrice: '', mrp: '' }],
+  items: [{ productId: '', itemName: '', categoryId: '', sku: '', quantity: 1, unitPrice: '', mrp: '' }],
   discount: '0',
   paymentMethod: 'CASH',
   paymentStatus: 'PAID',
@@ -25,7 +25,7 @@ const emptyForm = {
 const formatDate = (val) => {
   if (!val) return '—';
   if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}/.test(val)) {
-    const [y, m, d] = val.split('T')[0].split('-');
+    const [y, m, d] = val.slice(0, 10).split('-');
     return `${d}-${m}-${y}`;
   }
   try {
@@ -69,6 +69,7 @@ export default function Purchases() {
   const [purchases, setPurchases] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [viewPurchase, setViewPurchase] = useState(null);
   const [form, setForm] = useState({ ...emptyForm, items: [{ ...emptyForm.items[0] }] });
@@ -80,11 +81,13 @@ export default function Purchases() {
     Promise.allSettled([
       api.get('/purchases'),
       api.get('/suppliers?status=ACTIVE'),
-      api.get('/products')
-    ]).then(([p, s, pr]) => {
+      api.get('/products'),
+      api.get('/categories')
+    ]).then(([p, s, pr, cat]) => {
       if (p.status === 'fulfilled') setPurchases(p.value.data || []);
       if (s.status === 'fulfilled') setSuppliers(s.value.data || []);
       if (pr.status === 'fulfilled') setProducts(pr.value.data || []);
+      if (cat.status === 'fulfilled') setCategories(cat.value.data || []);
     });
   };
 
@@ -96,7 +99,7 @@ export default function Purchases() {
   const addItem = () => {
     setForm(prev => ({
       ...prev,
-      items: [...prev.items, { productId: '', sku: '', itemName: '', quantity: 1, unitPrice: '', mrp: '' }]
+      items: [...prev.items, { productId: '', itemName: '', categoryId: '', sku: '', quantity: 1, unitPrice: '', mrp: '' }]
     }));
   };
 
@@ -117,6 +120,9 @@ export default function Purchases() {
         if (prod) {
           items[i].itemName = prod.name;
           items[i].sku = prod.sku || '';
+          items[i].categoryId = prod.categoryId != null
+            ? String(prod.categoryId)
+            : (prod.category?.id != null ? String(prod.category.id) : '');
           if (prod.purchasePrice != null && prod.purchasePrice !== '') {
             items[i].unitPrice = prod.purchasePrice;
           }
@@ -131,7 +137,6 @@ export default function Purchases() {
 
   const resetForm = () => {
     setForm({ ...emptyForm, items: [{ ...emptyForm.items[0] }] });
-    setError(null);
     setShowPaymentModal(false);
   };
 
@@ -178,6 +183,7 @@ export default function Purchases() {
         notes: form.notes || null,
         items: form.items.map(it => ({
           productId: it.productId || null,
+          categoryId: it.categoryId ? Number(it.categoryId) : null,
           sku: it.sku ? it.sku.trim() : null,
           itemName: it.itemName,
           quantity: Number(it.quantity) || 1,
@@ -272,12 +278,32 @@ export default function Purchases() {
   const totalPaid = purchases.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0);
   const totalDue = Math.max(0, totalSpent - totalPaid);
 
+  const getPurchaseCategories = (p) => {
+    const names = [];
+    const seen = new Set();
+    for (const it of p.items || []) {
+      const rawName =
+        it.category?.name ||
+        it.product?.category?.name ||
+        it.product?.categoryName ||
+        categories.find(
+          (c) => String(c.id) === String(it.categoryId || it.category?.id || it.product?.categoryId || it.product?.category?.id || '')
+        )?.name;
+      if (rawName && !seen.has(rawName)) {
+        seen.add(rawName);
+        names.push(rawName);
+      }
+    }
+    return names;
+  };
+
   const filteredPurchases = purchases.filter(p => {
     const term = search.toLowerCase().trim();
     if (!term) return true;
     return (p.supplier?.name || '').toLowerCase().includes(term)
       || (p.invoiceNumber || '').toLowerCase().includes(term)
-      || (p.notes || '').toLowerCase().includes(term);
+      || (p.notes || '').toLowerCase().includes(term)
+      || getPurchaseCategories(p).some(c => c.toLowerCase().includes(term));
   });
 
   return (
@@ -376,48 +402,72 @@ export default function Purchases() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80">
                   <tr>
-                    <th className="py-3 px-4 w-16 text-center">S.NO</th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Supplier</th>
-                    <th className="py-3 px-4">Invoice #</th>
-                    <th className="py-3 px-4 text-center">Items</th>
-                    <th className="py-3 px-4">Grand Total</th>
-                    <th className="py-3 px-4">Payment</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-center min-w-[170px]">Action</th>
+                    <th className="py-3 px-2.5 w-12 text-center whitespace-nowrap">S.NO</th>
+                    <th className="py-3 px-2.5 whitespace-nowrap">Date</th>
+                    <th className="py-3 px-2.5 whitespace-nowrap">Supplier</th>
+                    <th className="py-3 px-2.5 whitespace-nowrap">Invoice</th>
+                    <th className="py-3 px-2.5 whitespace-nowrap">Invoice Date</th>
+                    <th className="py-3 px-2.5 text-center whitespace-nowrap">Items</th>
+                    <th className="py-3 px-2.5 whitespace-nowrap">Amount</th>
+                    <th className="py-3 px-2.5 whitespace-nowrap">Categories</th>
+                    <th className="py-3 px-2.5 whitespace-nowrap">Payment Mode</th>
+                    <th className="py-3 px-2.5 text-center whitespace-nowrap">Status</th>
+                    <th className="py-3 px-3 text-right min-w-[120px] whitespace-nowrap">
+                      <span className="inline-block w-[70px] text-center">Action</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredPurchases.length === 0 ? (
                     <tr>
-                      <td colSpan="9" className="py-12 text-center text-xs text-slate-400 font-medium">
+                      <td colSpan="11" className="py-12 text-center text-xs text-slate-400 font-medium">
                         {purchases.length === 0 ? 'No purchases recorded yet.' : 'No purchases matching your search filter.'}
                       </td>
                     </tr>
                   ) : filteredPurchases.map((p, idx) => (
                     <tr key={p.id} className="hover:bg-slate-50/60 transition">
-                      <td className="py-3.5 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                      <td className="py-3.5 px-4 text-slate-500 font-medium whitespace-nowrap">{formatDate(p.purchaseDate)}</td>
-                      <td className="py-3.5 px-4 font-bold text-slate-800">
+                      <td className="py-3.5 px-2.5 text-center font-medium text-slate-400">{idx + 1}</td>
+                      <td className="py-3.5 px-2.5 text-slate-500 font-medium whitespace-nowrap">
+                        {formatDate(p.createdAt || p.purchaseDate)}
+                      </td>
+                      <td className="py-3.5 px-2.5 font-bold text-slate-800 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <Truck className="w-3.5 h-3.5 text-slate-400" />
+                          <Truck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span>{p.supplier?.name || '—'}</span>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-mono font-medium">{p.invoiceNumber || '—'}</td>
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="py-3.5 px-2.5 text-slate-600 font-mono font-medium whitespace-nowrap">{p.invoiceNumber || '—'}</td>
+                      <td className="py-3.5 px-2.5 text-slate-500 font-medium whitespace-nowrap">
+                        {formatDate(p.invoiceDate || p.purchaseDate)}
+                      </td>
+                      <td className="py-3.5 px-2.5 text-center">
                         <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[11px]">
                           {p.items?.length || 0}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-black text-indigo-700">₹{Math.round(Number(p.grandTotal))}</td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-2.5 font-black text-indigo-700 whitespace-nowrap">₹{Math.round(Number(p.grandTotal))}</td>
+                      <td className="py-3.5 px-2.5 text-slate-600 font-semibold whitespace-nowrap">
+                        {(() => {
+                          const cats = getPurchaseCategories(p);
+                          if (cats.length === 0) return <span className="text-slate-400 font-medium">—</span>;
+                          if (cats.length === 1) return <span>{cats[0]}</span>;
+                          return (
+                            <span className="inline-flex items-center gap-1" title={cats.join(', ')}>
+                              <span>{cats[0]}</span>
+                              <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                +{cats.length - 1}
+                              </span>
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      <td className="py-3.5 px-2.5 whitespace-nowrap">
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
                           {p.paymentMethod}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex flex-col">
+                      <td className="py-3.5 px-2.5 text-center whitespace-nowrap">
+                        <div className="inline-flex flex-col items-center">
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold w-fit ${
                             p.paymentStatus === 'PAID' ? 'bg-emerald-50 text-emerald-700' :
                             p.paymentStatus === 'PARTIAL' ? 'bg-amber-50 text-amber-700' :
@@ -432,35 +482,35 @@ export default function Purchases() {
                           )}
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <div className="inline-flex items-center justify-center gap-1.5">
-                          <div className="w-[84px] flex justify-end">
-                            {p.paymentStatus !== 'PAID' && (
-                              <button
-                                type="button"
-                                onClick={() => openPayBalance(p)}
-                                className="px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95 whitespace-nowrap"
-                                title="Pay Remaining Balance"
-                              >
-                                <CreditCard className="w-3.5 h-3.5" />
-                                <span>Pay Due</span>
-                              </button>
-                            )}
+                      <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          {p.paymentStatus !== 'PAID' && (
+                            <button
+                              type="button"
+                              onClick={() => openPayBalance(p)}
+                              className="px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95 whitespace-nowrap"
+                              title="Pay Remaining Balance"
+                            >
+                              <CreditCard className="w-3.5 h-3.5" />
+                              <span>Pay Due</span>
+                            </button>
+                          )}
+                          <div className="inline-flex items-center gap-1.5 shrink-0">
+                            <button
+                              onClick={() => { setViewPurchase(p); loadPaymentHistory(p.id); }}
+                              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 inline-flex items-center justify-center transition shrink-0"
+                              title="View Invoice Details"
+                            >
+                              <Eye className="w-4 h-4 stroke-[2]" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 inline-flex items-center justify-center transition shrink-0"
+                              title="Delete Record"
+                            >
+                              <Trash2 className="w-4 h-4 stroke-[2]" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => { setViewPurchase(p); loadPaymentHistory(p.id); }}
-                            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 inline-flex items-center justify-center transition shrink-0"
-                            title="View Invoice Details"
-                          >
-                            <Eye className="w-4 h-4 stroke-[2]" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(p.id)}
-                            className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-600 inline-flex items-center justify-center transition shrink-0"
-                            title="Delete Record"
-                          >
-                            <Trash2 className="w-4 h-4 stroke-[2]" />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -506,6 +556,20 @@ export default function Purchases() {
                 </select>
               </div>
 
+              {/* Invoice Number */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
+                  <Hash className="w-3.5 h-3.5 text-indigo-600" />
+                  Supplier Bill / Invoice #
+                </label>
+                <input
+                  value={form.invoiceNumber}
+                  onChange={e => setForm({ ...form, invoiceNumber: e.target.value })}
+                  placeholder="e.g. INV-2026-904"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition"
+                />
+              </div>
+
               {/* Purchase Date */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
@@ -518,20 +582,6 @@ export default function Purchases() {
                   value={form.purchaseDate}
                   onChange={e => setForm({ ...form, purchaseDate: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition"
-                />
-              </div>
-
-              {/* Invoice Number */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
-                  <Hash className="w-3.5 h-3.5 text-indigo-600" />
-                  Supplier Bill / Invoice #
-                </label>
-                <input
-                  value={form.invoiceNumber}
-                  onChange={e => setForm({ ...form, invoiceNumber: e.target.value })}
-                  placeholder="e.g. INV-2026-904"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition"
                 />
               </div>
             </div>
@@ -556,28 +606,29 @@ export default function Purchases() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/50 text-slate-500 font-bold uppercase border-b border-slate-100">
+                <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase border-b border-slate-200/80">
                   <tr>
-                    <th className="py-3 px-3 w-16 text-center whitespace-nowrap align-middle">S.NO</th>
-                    <th className="py-3 px-3 w-52 min-w-[190px] text-left whitespace-nowrap align-middle">Link Product</th>
-                    <th className="py-3 px-3 w-36 min-w-[130px] text-left whitespace-nowrap align-middle">SKU</th>
-                    <th className="py-3 px-3 min-w-[220px] text-left whitespace-nowrap align-middle">Description / Item Name *</th>
-                    <th className="py-3 px-3 w-20 text-center whitespace-nowrap align-middle">Qty</th>
-                    <th className="py-3 px-3 w-36 text-right whitespace-nowrap align-middle">Purchase Price (₹)</th>
-                    <th className="py-3 px-3 w-28 text-right whitespace-nowrap align-middle">MRP (₹)</th>
-                    <th className="py-3 px-3 w-28 text-right whitespace-nowrap align-middle">Line Total</th>
-                    <th className="py-3 px-3 w-20 text-center whitespace-nowrap align-middle">Actions</th>
+                    <th className="py-3 px-1.5 w-10 min-w-[42px] text-center whitespace-nowrap align-middle">S.NO</th>
+                    <th className="py-3 pl-[15px] pr-1.5 w-[14%] min-w-[138px] text-left whitespace-nowrap align-middle">Link Product</th>
+                    <th className="py-3 pl-[15px] pr-1.5 w-[18%] min-w-[175px] text-left whitespace-nowrap align-middle">Item Name *</th>
+                    <th className="py-3 pl-[15px] pr-1.5 w-[14%] min-w-[145px] text-left whitespace-nowrap align-middle">Categories</th>
+                    <th className="py-3 pl-[15px] pr-1.5 w-[12%] min-w-[115px] text-left whitespace-nowrap align-middle">SKU</th>
+                    <th className="py-3 px-1.5 w-14 min-w-[54px] text-center whitespace-nowrap align-middle">Qty</th>
+                    <th className="py-2.5 px-1.5 w-[100px] min-w-[100px] text-center whitespace-normal leading-tight align-middle">Purchase<br />Price (₹)</th>
+                    <th className="py-3 px-1.5 w-[100px] min-w-[100px] text-center whitespace-nowrap align-middle">MRP (₹)</th>
+                    <th className="py-3 px-1.5 w-20 min-w-[74px] text-center whitespace-nowrap align-middle">Line Total</th>
+                    <th className="py-3 px-1.5 w-16 min-w-[64px] text-center whitespace-nowrap align-middle">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {form.items.map((it, i) => (
                     <tr key={i} className="hover:bg-slate-50/40 transition">
-                      <td className="py-3 px-3 text-center text-slate-400 font-bold align-middle">{i + 1}</td>
-                      <td className="py-3 px-3 align-middle">
+                      <td className="py-3 px-1.5 text-center text-slate-400 font-bold align-middle">{i + 1}</td>
+                      <td className="py-3 px-1.5 align-middle">
                         <select
                           value={it.productId}
                           onChange={e => updateItem(i, 'productId', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 truncate"
+                          className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 truncate"
                           title={products.find(p => p.id === it.productId)?.name || 'Custom item'}
                         >
                           <option value="">-- Custom / Non-stock --</option>
@@ -588,34 +639,48 @@ export default function Purchases() {
                           ))}
                         </select>
                       </td>
-                      <td className="py-3 px-3 align-middle">
-                        <input
-                          value={it.sku || ''}
-                          onChange={e => updateItem(i, 'sku', e.target.value)}
-                          placeholder="e.g. SKU"
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                        />
-                      </td>
-                      <td className="py-3 px-3 align-middle">
+                      <td className="py-3 px-1.5 align-middle">
                         <input
                           required
                           value={it.itemName}
                           onChange={e => updateItem(i, 'itemName', e.target.value)}
                           placeholder="e.g. JK Copier A4 75GSM"
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3 align-middle">
+                      <td className="py-3 px-1.5 align-middle">
+                        <select
+                          value={it.categoryId || ''}
+                          onChange={e => updateItem(i, 'categoryId', e.target.value)}
+                          className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 truncate"
+                        >
+                          <option value="">-- Select Category --</option>
+                          {categories
+                            .filter(c => c.status !== 'INACTIVE' || String(c.id) === String(it.categoryId))
+                            .map(c => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </select>
+                      </td>
+                      <td className="py-3 px-1.5 align-middle">
+                        <input
+                          value={it.sku || ''}
+                          onChange={e => updateItem(i, 'sku', e.target.value)}
+                          placeholder="e.g. SKU"
+                          className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </td>
+                      <td className="py-3 px-1.5 align-middle">
                         <input
                           type="number"
                           min="1"
                           required
                           value={it.quantity}
                           onChange={e => updateItem(i, 'quantity', e.target.value)}
-                          className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-center text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-1.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-center text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3 align-middle">
+                      <td className="py-3 px-1.5 align-middle">
                         <input
                           type="number"
                           step="1"
@@ -624,10 +689,10 @@ export default function Purchases() {
                           value={it.unitPrice}
                           onChange={e => updateItem(i, 'unitPrice', e.target.value)}
                           placeholder="0"
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-center text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3 align-middle">
+                      <td className="py-3 px-1.5 align-middle">
                         <input
                           type="number"
                           step="1"
@@ -641,13 +706,13 @@ export default function Purchases() {
                             }
                           }}
                           placeholder="0"
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-right text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-center text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </td>
-                      <td className="py-3 px-3 text-right font-black text-slate-900 text-sm whitespace-nowrap align-middle">
+                      <td className="py-3 px-1.5 text-center font-black text-slate-900 text-sm whitespace-nowrap align-middle">
                         ₹{Math.round((Number(it.unitPrice) || 0) * (Number(it.quantity) || 0))}
                       </td>
-                      <td className="py-3 px-3 text-center whitespace-nowrap align-middle">
+                      <td className="py-3 px-1.5 text-center whitespace-nowrap align-middle">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
@@ -906,7 +971,7 @@ export default function Purchases() {
 
               <div className="rounded-2xl border border-slate-100 overflow-hidden">
                 <table className="w-full text-xs">
-                  <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase border-b border-slate-100">
+                  <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80">
                     <tr>
                       <th className="py-2.5 px-3 text-left">Item Details</th>
                       <th className="py-2.5 px-3 text-center">Qty</th>
@@ -920,8 +985,13 @@ export default function Purchases() {
                       <tr key={i}>
                         <td className="py-2.5 px-3 font-semibold text-slate-800">
                           <div>{it.itemName || it.product?.name || '—'}</div>
-                          {(it.sku || it.product?.sku) && (
-                            <div className="text-[10px] text-slate-400 font-mono font-medium">SKU: {it.sku || it.product?.sku}</div>
+                          {((it.category?.name || it.product?.category?.name) || (it.sku || it.product?.sku)) && (
+                            <div className="text-[10px] text-slate-400 font-mono font-medium">
+                              {[
+                                (it.category?.name || it.product?.category?.name) && `Cat: ${it.category?.name || it.product?.category?.name}`,
+                                (it.sku || it.product?.sku) && `SKU: ${it.sku || it.product?.sku}`
+                              ].filter(Boolean).join(' • ')}
+                            </div>
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-center text-slate-600 font-bold">{it.quantity}</td>
@@ -975,7 +1045,7 @@ export default function Purchases() {
                   </div>
                   <div className="max-h-44 overflow-y-auto">
                     <table className="w-full text-xs">
-                      <thead className="bg-slate-50/60 text-slate-400 font-bold uppercase sticky top-0">
+                      <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80 sticky top-0">
                         <tr>
                           <th className="py-2 px-3 text-center w-12">S.NO</th>
                           <th className="py-2 px-3 text-left">Date & Time</th>
@@ -1091,7 +1161,7 @@ export default function Purchases() {
                   </div>
                   <div className="max-h-40 overflow-y-auto">
                     <table className="w-full text-xs">
-                      <thead className="bg-slate-50/60 text-slate-400 font-bold uppercase sticky top-0">
+                      <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80 sticky top-0">
                         <tr>
                           <th className="py-2 px-3 text-center w-12">S.NO</th>
                           <th className="py-2 px-3 text-left">Date & Time</th>

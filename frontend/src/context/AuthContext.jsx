@@ -11,6 +11,7 @@ export const ALL_PERMISSIONS = [
   { key: 'reports', label: 'Reports', group: 'Main' },
   { key: 'expenses', label: 'Expenses', group: 'Main' },
   { key: 'bill_history', label: 'Bill History', group: 'Main' },
+  { key: 'settings', label: 'Store Settings', group: 'Settings' },
   { key: 'users', label: 'User Management', group: 'Settings' },
   { key: 'roles', label: 'Roles & Permissions', group: 'Settings' },
   { key: 'products', label: 'Products', group: 'Settings' },

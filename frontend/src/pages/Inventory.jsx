@@ -129,15 +129,16 @@ export default function Inventory() {
           <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+                <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80 whitespace-nowrap">
                   <tr>
-                    <th className="py-3 px-4 w-16 text-center">S.NO</th>
-                    <th className="py-3 px-4">Item</th>
-                    <th className="py-3 px-4">SKU</th>
-                    <th className="py-3 px-4">Stock</th>
-                    <th className="py-3 px-4">Min Limit</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Audit</th>
+                    <th className="py-3 px-3 w-12 text-center">S.NO</th>
+                    <th className="py-3 px-3">Item</th>
+                    <th className="py-3 px-3">Category</th>
+                    <th className="py-3 px-3">SKU</th>
+                    <th className="py-3 px-3">Stock</th>
+                    <th className="py-3 px-3">Min Limit</th>
+                    <th className="py-3 px-3">Status</th>
+                    <th className="py-3 px-3 text-right">Audit</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -160,23 +161,26 @@ export default function Inventory() {
                     onClick={() => loadTransactions(p)}
                     className={`cursor-pointer transition ${selectedProduct?.id === p.id ? 'bg-indigo-50/40' : 'hover:bg-slate-50/50'}`}
                   >
-                    <td className="py-3.5 px-4 text-center font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-800">{p.name}</td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400">{p.sku}</td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3 text-center font-medium text-slate-400">{idx + 1}</td>
+                    <td className="py-3.5 px-3 font-bold text-slate-800 whitespace-nowrap">{p.name}</td>
+                    <td className="py-3.5 px-3 text-slate-600 font-semibold whitespace-nowrap">
+                      {p.categoryName || p.category?.name || categories.find(c => String(c.id) === String(p.categoryId))?.name || '—'}
+                    </td>
+                    <td className="py-3.5 px-3 font-mono text-[11px] text-slate-400 whitespace-nowrap">{p.sku}</td>
+                    <td className="py-3.5 px-3">
                       <span className={`font-black ${p.lowStock ? 'text-rose-600' : 'text-slate-800'}`}>
                         {p.currentStock}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-500 font-medium">{p.minStockLevel}</td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3 text-slate-500 font-medium">{p.minStockLevel}</td>
+                    <td className="py-3.5 px-3">
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         p.lowStock ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700'
                       }`}>
                         {p.lowStock ? 'Reorder' : 'Healthy'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-3 text-right">
                       <span className="text-[11px] font-bold text-indigo-600 hover:underline">History</span>
                     </td>
                   </tr>

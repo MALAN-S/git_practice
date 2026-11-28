@@ -163,7 +163,7 @@ export default function Expenses() {
       <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
+            <thead className="bg-[#f8f9fa] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200/80">
               <tr>
                 <th className="py-3 px-4 w-16 text-center">S.NO</th>
                 <th className="py-3 px-4">Category</th>
